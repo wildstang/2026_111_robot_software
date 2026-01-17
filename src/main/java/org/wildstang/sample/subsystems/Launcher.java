@@ -77,7 +77,7 @@ public class Launcher implements Subsystem{
         if(source.equals(driverLeftTrigger) || (source.equals(driverLeftStickButton) && !inFeedingZone) || source.equals(operatorRightTrigger)){
             currentState = GameStates.SHOOT;
         }
-        else if(source.equals(driverLeftStickButton) && inFeedingZone) || source.equals(operatorLeftStickButton) || source.equals(operatorLeftTrigger) || source.equals(operatorRightStickButton)){
+        else if(source.equals(driverLeftStickButton) && inFeedingZone || source.equals(operatorLeftStickButton) || source.equals(operatorLeftTrigger) || source.equals(operatorRightStickButton)){
             currentState = GameStates.FEED;
         }
         else{
@@ -97,12 +97,9 @@ public class Launcher implements Subsystem{
                 flywheelVelocity = flywheelPID.velocityPVal(desiredFlywheelVel, flywheelMotor.getVelocity());
                 hoodPosition = hoodPID.positionPIController(desiredHoodPos, hoodMotor.getPosition()*2*Math.PI);
 
-                if((((flywheelVelocity >= (flywheelVelocity - flywheelVelTolerance)) 
-                    && (flywheelVelocity <= (flywheelVelocity + flywheelVelTolerance))) 
-                        && ((hoodPosition >= (hoodPosition-hoodPositionTolerance)) 
-                            && (hoodPosition <= (hoodPosition+hoodPositionTolerance))))){
-                                goodToFire = true;
-                            }
+                
+                goodToFire = true;
+                            
 
                 break;
 
@@ -116,6 +113,17 @@ public class Launcher implements Subsystem{
 
                 break;
         }
+    }
+
+    private double[][] getTolerancedValues(double flywheelVel, double hoodPos){
+
+        double flywheelTolerance = 0;
+        double hoodPostionTolerance = 0;
+
+        double[] actualFlywheelVel = {flywheelVel - flywheelTolerance, flywheelVel + flywheelTolerance};
+        double[] actualHoodPosition = {hoodPos - hoodPositionTolerance, hoodPos + hoodPostionTolerance};
+
+        return new double[][]{actualFlywheelVel,actualHoodPosition};
     }
 
     @Override
