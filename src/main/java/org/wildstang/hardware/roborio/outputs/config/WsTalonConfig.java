@@ -2,6 +2,8 @@ package org.wildstang.hardware.roborio.outputs.config;
 
 import org.wildstang.framework.hardware.OutputConfig;
 
+import com.ctre.phoenix6.CANBus;
+
 /**
  * Contains configurations for Phoenix Talon and Victor motor controllers.
  */

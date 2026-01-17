@@ -29,6 +29,17 @@ public final class CANConstants {
     public static final int DRIVE4 = 17; // BR
     public static final int ANGLE4 = 18;
 
+    public static final int FLYWHEEL = 20;
+    public static final int FLYWHEEL_FOLLOW = 21;
+    public static final int HOOD = 22;
+    public static final int TURRET = 23;
+    public static final int BALLPATH = 24;
+    public static final int BALLPATH_FOLLOW = 25;
+    public static final int INTAKE = 26;
+    public static final int INTAKE_DEPLOY = 27;
+    public static final int CLIMB1 = 28;
+    public static final int CLIMB2 = 29;
+
     public static final int FL_ENCODER = 41;
     public static final int FR_ENCODER = 42;
     public static final int BL_ENCODER = 43;
