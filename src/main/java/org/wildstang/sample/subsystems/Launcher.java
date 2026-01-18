@@ -23,18 +23,25 @@ public class Launcher implements Subsystem{
 
     public boolean inFeedingZone;
 
+    
+    /* Flywheel Stuff */
     private double flywheelVelocity;
-    private double desiredFlywheelVel;
+    private double desiredFlywheelShootVel;
+    private double desiredFlywheelFeedVel;
     private PIDController flywheelPID;
     private double flywheelPGain;
-    private double flywheelVelTolerance;
+    private double flywheelShootVelTolerance;
+    private double flywheelFeedVelTolerance;
 
 
+    /* Hood Stuff */
     private double hoodPosition;
-    private double desiredHoodPos;
+    private double desiredHoodShootPos;
+    private double desiredHoodFeedPos;
     private PIDController hoodPID;
     private double hoodPGain, hoodIGain, maxIntegralValue;
-    private double hoodPositionTolerance;
+    private double hoodShootPositionTolerance;
+    private double hoodFeedPositionTolerance;
 
     public boolean goodToFire;
 
@@ -67,8 +74,10 @@ public class Launcher implements Subsystem{
         flywheelPID = new PIDController(flywheelPGain);
         hoodPID = new PIDController(hoodPGain, hoodIGain, maxIntegralValue);
 
-        flywheelVelTolerance = 0;
-        hoodPositionTolerance = 0;
+        flywheelShootVelTolerance = 0;
+        hoodShootPositionTolerance = 0;
+        flywheelFeedVelTolerance = 0;
+        hoodFeedPositionTolerance = 0;
 
     }
 
@@ -92,38 +101,76 @@ public class Launcher implements Subsystem{
 
     @Override
     public void update() {
+        
         switch (currentState){
             case SHOOT:
-                flywheelVelocity = flywheelPID.velocityPVal(desiredFlywheelVel, flywheelMotor.getVelocity());
-                hoodPosition = hoodPID.positionPIController(desiredHoodPos, hoodMotor.getPosition()*2*Math.PI);
-
                 
-                goodToFire = true;
+                flywheelVelocity = flywheelPID.velocityPVal(desiredFlywheelShootVel, flywheelMotor.getVelocity());
+                hoodPosition = hoodPID.positionPIController(desiredHoodShootPos, hoodMotor.getPosition()*2*Math.PI);
+
+                goodToFire = isGoodToFire(flywheelVelocity, hoodPosition);
                             
 
                 break;
 
             case FEED:
 
+                flywheelVelocity = flywheelPID.velocityPVal(desiredFlywheelFeedVel, flywheelMotor.getVelocity());
+                hoodPosition = hoodPID.positionPIController(desiredHoodFeedPos, hoodMotor.getPosition()*2*Math.PI);
+
+                goodToFire = isGoodToFire(flywheelVelocity, hoodPosition);
+
                 break;
 
             case STOW:
+                
                 goodToFire = false;
-
 
                 break;
         }
     }
 
-    private double[][] getTolerancedValues(double flywheelVel, double hoodPos){
+    private boolean isGoodToFire(double flywheelVel, double hoodPos){
 
-        double flywheelTolerance = 0;
-        double hoodPostionTolerance = 0;
+        boolean flywheelGood = false;
+        boolean hoodPosGood = false;
 
-        double[] actualFlywheelVel = {flywheelVel - flywheelTolerance, flywheelVel + flywheelTolerance};
-        double[] actualHoodPosition = {hoodPos - hoodPositionTolerance, hoodPos + hoodPostionTolerance};
+        if(currentState.equals(GameStates.SHOOT)){
+            double[] actualFlywheelVel = {flywheelVel - flywheelShootVelTolerance, flywheelVel + flywheelShootVelTolerance};
+            double[] actualHoodPosition = {hoodPos - hoodShootPositionTolerance, hoodPos + hoodShootPositionTolerance};
 
-        return new double[][]{actualFlywheelVel,actualHoodPosition};
+            
+            if(flywheelVel >= actualFlywheelVel[0] && flywheelVel <= actualFlywheelVel[1]){
+                flywheelGood = true;
+            }else{
+                flywheelGood = false;
+            }
+            if(hoodPos >= actualHoodPosition[0] && hoodPos <= actualHoodPosition[1]){
+                hoodPosGood = true;
+            }else{
+                hoodPosGood = false;
+            }
+
+        
+        }else if(currentState.equals(GameStates.FEED)){
+            double[] actualFlywheelVel = {flywheelVel - flywheelFeedVelTolerance, flywheelVel + flywheelFeedVelTolerance};
+            double[] actualHoodPosition = {hoodPos - hoodFeedPositionTolerance, hoodPos + hoodFeedPositionTolerance};
+
+            
+            if(flywheelVel >= actualFlywheelVel[0] && flywheelVel <= actualFlywheelVel[1]){
+                flywheelGood = true;
+            }else{
+                flywheelGood = false;
+            }
+            if(hoodPos >= actualHoodPosition[0] && hoodPos <= actualHoodPosition[1]){
+                hoodPosGood = true;
+            }else{
+                hoodPosGood = false;
+            }
+        }
+
+        return flywheelGood && hoodPosGood;
+        
     }
 
     @Override

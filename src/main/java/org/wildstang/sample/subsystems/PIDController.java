@@ -14,14 +14,6 @@ public class PIDController {
     private double maxIntegral;
 
 
-    public PIDController(double kpP, double kpI, double kvP, double maxIntegral){
-       this.kpP = kpP;
-       this.kpI = kpI;
-       this.kvP = kvP;
-       this.tPrevious = Timer.getFPGATimestamp();
-       this.maxIntegral = maxIntegral; 
-    }
-
     public PIDController(double kvP){
         this.kvP = kvP;
     }
