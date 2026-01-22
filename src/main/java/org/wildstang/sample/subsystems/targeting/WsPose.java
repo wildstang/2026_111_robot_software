@@ -224,4 +224,17 @@ public class WsPose implements Subsystem {
     public String getName() {
         return "Ws Pose";
     }
+
+    public double getFlywheelFeedVelocity(){
+        return 0;
+    }
+    public double getFlywheelShootVelocity(){
+        return 0;
+    }
+    public double getHoodFeedPosition(){
+        return 0;
+    }
+    public double getHoodShootPosition(){
+        return 0;
+    }
 }

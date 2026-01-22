@@ -13,6 +13,7 @@ import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -33,10 +34,11 @@ public class WsTalon extends WsMotorController {
     private TalonFX follower;
     private TalonFXConfigurator followerApply;
 
-    private enum RequestType {PERCENT_OUTPUT, POSITION}
+    private enum RequestType {PERCENT_OUTPUT, POSITION, VELOCITY}
     private RequestType currentRequest = RequestType.PERCENT_OUTPUT;
     private DutyCycleOut percentRequest = new DutyCycleOut(0.0);
     private PositionDutyCycle positionRequest = new PositionDutyCycle(0.0);
+    private VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0);
     
     private WsMotorControllers motorControllerType;
     private boolean followerExists = false;
@@ -198,6 +200,11 @@ public class WsTalon extends WsMotorController {
     public void setPosition(double target){
         positionRequest.withPosition(target);
         currentRequest = RequestType.POSITION;
+    }
+
+    public void setVelocity(double target){
+        velocityRequest.withVelocity(target);
+        currentRequest = RequestType.VELOCITY;
     }
 
     /**
