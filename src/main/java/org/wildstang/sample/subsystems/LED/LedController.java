@@ -3,22 +3,45 @@ package org.wildstang.sample.subsystems.LED;
 import org.wildstang.framework.core.Core;
 import org.wildstang.framework.io.inputs.Input;
 import org.wildstang.framework.subsystems.Subsystem;
-import org.wildstang.hardware.roborio.inputs.WsJoystickAxis;
-import org.wildstang.sample.robot.WsInputs;
+import org.wildstang.sample.robot.CANConstants;
 import org.wildstang.sample.robot.WsSubsystems;
-import org.wildstang.sample.subsystems.LED.Blinkin.BlinkinValues;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
+import org.wildstang.sample.subsystems.targeting.WsPose;
+
+import com.ctre.phoenix6.configs.CANdleConfiguration;
+import com.ctre.phoenix6.controls.RainbowAnimation;
+import com.ctre.phoenix6.controls.SingleFadeAnimation;
+import com.ctre.phoenix6.hardware.CANdle;
+import com.ctre.phoenix6.signals.RGBWColor;
+import com.ctre.phoenix6.signals.StatusLedWhenActiveValue;
+import com.ctre.phoenix6.signals.StripTypeValue;
 
 
 public class LedController implements Subsystem {
 
-    private SwerveDrive swerve;
-    private Blinkin led;
-    private BlinkinValues color;
+    private WsPose pose;
+    private CANdle led;
+    private CANdleConfiguration config = new CANdleConfiguration();
+
+    private RainbowAnimation rainbow = new RainbowAnimation(0, 30);
+    private SingleFadeAnimation fade = new SingleFadeAnimation(0, 30);
+
+    private RGBWColor red = new RGBWColor(255,0,0);
+    private RGBWColor blue = new RGBWColor(0,0,255);
+    private RGBWColor green = new RGBWColor(0,255,0);
+    private RGBWColor cyan = new RGBWColor(0, 255, 255);
+
+    private boolean isAuto = true;
 
     @Override
     public void update(){
-        led.setColor(color);
+        if (Core.isBlue() && isAuto){
+            led.setControl(fade.withColor(blue));
+        } else if (isAuto){
+            led.setControl(fade.withColor(red));
+        } else {
+            led.setControl(rainbow);
+        }
     }
 
     @Override
@@ -26,16 +49,19 @@ public class LedController implements Subsystem {
     }
 
     @Override
-    public void initSubsystems() {      
-        swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
+    public void initSubsystems() {    
+        pose = (WsPose) Core.getSubsystemManager().getSubsystem(WsSubsystems.WS_POSE);
     }
 
     @Override
     public void init() {
         
         //Outputs
-        led = new Blinkin(0);
-        color = BlinkinValues.RAINBOW_RAINBOW_PALETTE;
+        led = new CANdle(CANConstants.CANDLE, "mechanism_canivore");
+        config.LED.StripType = StripTypeValue.RGB;
+        config.LED.BrightnessScalar = 1.0;
+        config.CANdleFeatures.StatusLedWhenActive = StatusLedWhenActiveValue.Disabled;
+        led.getConfigurator().apply(config);
     }
 
     @Override
@@ -49,5 +75,9 @@ public class LedController implements Subsystem {
     @Override
     public String getName() {
         return "Led Controller";
+    }
+
+    public void startAuto(){
+        isAuto = false;
     }
 }
