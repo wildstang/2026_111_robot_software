@@ -3,6 +3,7 @@ package org.wildstang.sample.subsystems.targeting;
 // ton of imports
 import org.wildstang.framework.subsystems.Subsystem;
 import org.wildstang.sample.robot.WsSubsystems;
+import org.wildstang.sample.subsystems.Constants;
 import org.wildstang.sample.subsystems.swerve.DriveConstants;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import org.wildstang.sample.subsystems.targeting.LimelightHelpers.PoseEstimate;
@@ -236,5 +237,31 @@ public class WsPose implements Subsystem {
     }
     public double getHoodShootPosition(){
         return 0;
+    }
+    
+    public double angleOfTurret(){
+        Pose2d robotPose = estimatedPose;
+        double hubXDistance = Math.abs(VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX());
+        double hubYDistance = Math.abs(VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getX());
+
+        if(robotPose.getX() < VisionConsts.ALLIANCE_ZONE){
+            // in our alliance zone
+            return Math.tanh((hubYDistance)/hubXDistance);
+            
+        }else if(robotPose.getX() > VisionConsts.ALLIANCE_ZONE){
+            // in the neutral zone
+            if(robotPose.getY() < VisionConsts.halfFieldY){
+                // lowwer half of field
+                double feedZoneXDistance = Math.abs(VisionConsts.lowFeedPos[0] - estimatedPose.getX());
+                double feedZoneYDistance = Math.abs(VisionConsts.lowFeedPos[1] - estimatedPose.getY());
+                return Math.tanh(feedZoneYDistance/feedZoneXDistance);
+            }else if(robotPose.getY() > VisionConsts.halfFieldY){
+                //upper half of field
+                double feedZoneXDistance = Math.abs(VisionConsts.highFeedPos[0] - estimatedPose.getX());
+                double feedZoneYDistance = Math.abs(VisionConsts.highFeedPos[1] - estimatedPose.getY());
+                return Math.tanh(feedZoneYDistance/feedZoneXDistance);
+            }
+        }
+            return 0.0;
     }
 }

@@ -8,6 +8,8 @@ import org.wildstang.sample.robot.WsOutputs;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.targeting.WsPose;
 
+import edu.wpi.first.math.geometry.Pose2d;
+
 public class Turret implements Subsystem{
 
     WsPose pose;
@@ -30,6 +32,8 @@ public class Turret implements Subsystem{
     @Override
     public void update() {
     }
+
+
 
     @Override
     public void resetState() {

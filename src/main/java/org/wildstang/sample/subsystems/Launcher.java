@@ -150,6 +150,7 @@ public class Launcher implements Subsystem{
                 flywheelVelocity = 0;
 
                 break;
+
         }
     }
 
