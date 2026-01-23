@@ -19,6 +19,7 @@ public class SwerveSignal {
     private double rotationSpeed = 0;
     private double rotationTarget = 0;
     private Pose2d drivingPose = new Pose2d();
+    private double autoMaxSpeed = 1.0;
     public enum controlState {MANUAL, ROTLOCKED, DRIVETOPOINT, X_DRIVETOPOINT, Y_DRIVETOPOINT}
     private controlState state = controlState.MANUAL;
     private SwerveRequest.FieldCentric driveCommand = new SwerveRequest.FieldCentric()
@@ -41,7 +42,7 @@ public class SwerveSignal {
                 .withTargetDirection(new Rotation2d(Math.toRadians(getRotTarget())));
             //.withTargetRateFeedforward(double) to potentially include rotation rate
         } else if (state == controlState.DRIVETOPOINT){
-            translationRequest.setTarget(getDriveToPoint());
+            translationRequest.setTarget(getDriveToPoint(), autoMaxSpeed);
             return translationRequest;
         } else if (state == controlState.X_DRIVETOPOINT){
             xTranslationRequest.setTarget(getDriveToPoint(), getHorizontal());
@@ -79,6 +80,13 @@ public class SwerveSignal {
         drivingPose = newTarget;
         rotationTarget = newTarget.getRotation().getDegrees();
         state = controlState.DRIVETOPOINT;
+        autoMaxSpeed = 1.0;
+    }
+    public void setDriveToPoint(Pose2d newTarget, double maxSpeed){
+        drivingPose = newTarget;
+        rotationTarget = newTarget.getRotation().getDegrees();
+        state = controlState.DRIVETOPOINT;
+        autoMaxSpeed = maxSpeed;
     }
     public void setXDriveToPoint(double hori, Pose2d newTarget){
         this.horizontalSpeed = hori;

@@ -11,21 +11,21 @@ import edu.wpi.first.wpilibj.Timer;
 public class SwerveToPointStep extends AutoStep {
 
     private SwerveDrive swerve;
-    private double turnStartTime; // Time to start turning to the end heading
+    private double maxspeed;
 
     private Pose2d fieldAutoPose;
 
     private Timer timer;
 
-    public SwerveToPointStep(SwerveDrive drive, Pose2d pose, double turnStart) {
-        this.turnStartTime = turnStart;
+    public SwerveToPointStep(SwerveDrive drive, Pose2d pose, double speed) {
+        this.maxspeed = speed;
         swerve = drive;
         timer = new Timer();
         fieldAutoPose = pose;
     }
 
     public SwerveToPointStep(SwerveDrive drive, Pose2d pose) {
-        turnStartTime = 0;
+        maxspeed = 1.0;
         swerve = drive;
         timer = new Timer();
         fieldAutoPose = pose;
@@ -39,11 +39,7 @@ public class SwerveToPointStep extends AutoStep {
 
     @Override
     public void update() {
-        if (timer.hasElapsed(turnStartTime)) {
-            swerve.setAutoValues(fieldAutoPose);
-        } else {
-            swerve.setAutoValues(new Pose2d(fieldAutoPose.getTranslation(), swerve.odoAngle()));
-        }
+        swerve.setAutoValues(fieldAutoPose, maxspeed);
         if (swerve.isAtPosition()) {
             setFinished();
         } 

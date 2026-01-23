@@ -68,6 +68,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     private double verticalPower;
 
     public boolean autoUsePID = true;
+    public double autoMaxSpeed = 1.0;
 
     private swerveCTRE swerve = new swerveCTRE(DriveConstants.swerveCTREconsts, 
         DriveConstants.frontLeft, DriveConstants.frontRight, DriveConstants.backLeft, DriveConstants.backRight);
@@ -245,7 +246,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
             // }
             
         } else if (driveState == DriveType.AUTO) {
-            swerveSignal.setDriveToPoint(targetPose);
+            swerveSignal.setDriveToPoint(targetPose, autoMaxSpeed);
         }
             
         swerve.setControl(swerveSignal.drive());
@@ -308,6 +309,10 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     // Sets autonomous values when driving to a pose and not using a motion profile
     public void setAutoValues(Pose2d target) {
         setAutoValues(0, 0, 0, 0, target);
+    }
+    public void setAutoValues(Pose2d target, double maxSpeed){
+        setAutoValues(0,0,0,0,target);
+        this.autoMaxSpeed = maxSpeed;
     }
 
     public void usePID(boolean use) {

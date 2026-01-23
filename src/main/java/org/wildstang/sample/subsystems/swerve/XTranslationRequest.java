@@ -25,9 +25,9 @@ public class XTranslationRequest implements SwerveRequest{
     public StatusCode apply(SwerveControlParameters arg0, SwerveModule<?, ?, ?>... arg1) {
 
         return request
-            .withVelocityX(DriveConstants.ALIGN_P * (targetPose.getX() - arg0.currentPose.getX()))
+            .withVelocityX(DriveConstants.ALIGN_P * DriveConstants.maxSpeed.in(MetersPerSecond) * (targetPose.getX() - arg0.currentPose.getX()))
             .withVelocityY(DriveConstants.maxSpeed.in(MetersPerSecond) * yPower)
-            .withTargetDirection(new Rotation2d(0))
+            .withTargetDirection(targetPose.getRotation())
             .apply(arg0, arg1);
     }
     public void setTarget(Pose2d target, double newY){

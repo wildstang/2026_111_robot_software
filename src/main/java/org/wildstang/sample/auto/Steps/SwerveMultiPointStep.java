@@ -1,5 +1,7 @@
 package org.wildstang.sample.auto.Steps;
 
+import java.util.Arrays;
+
 import org.wildstang.framework.auto.AutoStep;
 import org.wildstang.framework.core.Core;
 import org.wildstang.sample.robot.WsSubsystems;
@@ -16,6 +18,7 @@ public class SwerveMultiPointStep extends AutoStep {
 
     private int index = 0;
     private Pose2d[] poses;
+    private double[] speed;
     private double turnStartTime; // Time to start turning to the end heading
 
 
@@ -33,10 +36,18 @@ public class SwerveMultiPointStep extends AutoStep {
         this.turnStartTime = turnstart;
         swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
         this.poses = poses;
+        this.speed = speeds;
     }
 
     public SwerveMultiPointStep(Pose2d[] poses, double[] speeds) {
         this(poses, speeds, 0.0);
+    }
+    public SwerveMultiPointStep(Pose2d[] poses){
+        this.speed = new double[poses.length];
+        Arrays.fill(speed, 1.0);
+        this.turnStartTime = 0;
+        swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
+        this.poses = poses;
     }
 
     @Override
@@ -48,7 +59,7 @@ public class SwerveMultiPointStep extends AutoStep {
     @Override
     public void update() {
 
-        swerve.setAutoValues(new Pose2d(poses[index].getTranslation(), swerve.odoAngle()));
+        swerve.setAutoValues(new Pose2d(poses[index].getTranslation(), swerve.odoAngle()), speed[index]);
 
         // Drive to intermediate point
         if (index < poses.length - 1) {
