@@ -3,7 +3,7 @@ package org.wildstang.sample.subsystems.targeting;
 // ton of imports
 import org.wildstang.framework.subsystems.Subsystem;
 import org.wildstang.sample.robot.WsSubsystems;
-import org.wildstang.sample.subsystems.Constants;
+import org.wildstang.sample.subsystems.Turret;
 import org.wildstang.sample.subsystems.swerve.DriveConstants;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import org.wildstang.sample.subsystems.targeting.LimelightHelpers.PoseEstimate;
@@ -239,14 +239,17 @@ public class WsPose implements Subsystem {
         return 0;
     }
     
-    public double angleOfTurret(){
+    // Returns double array with turret angle wanted and also the zone we are in: 0 for alliance zone and 1,2 for the lower and upper half of the nuetral zone
+    public Object[] angleOfTurretNZone(){
+        Object[] angleNZone = new Object[2];
         Pose2d robotPose = estimatedPose;
         double hubXDistance = Math.abs(VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX());
         double hubYDistance = Math.abs(VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getX());
 
         if(robotPose.getX() < VisionConsts.ALLIANCE_ZONE){
             // in our alliance zone
-            return Math.tanh((hubYDistance)/hubXDistance);
+            angleNZone[0] = Math.tanh((hubYDistance)/hubXDistance);
+            angleNZone[1] = Turret.GameStates.FIRING;
             
         }else if(robotPose.getX() > VisionConsts.ALLIANCE_ZONE){
             // in the neutral zone
@@ -254,14 +257,16 @@ public class WsPose implements Subsystem {
                 // lowwer half of field
                 double feedZoneXDistance = Math.abs(VisionConsts.lowFeedPos[0] - estimatedPose.getX());
                 double feedZoneYDistance = Math.abs(VisionConsts.lowFeedPos[1] - estimatedPose.getY());
-                return Math.tanh(feedZoneYDistance/feedZoneXDistance);
+                angleNZone[0] = Math.tanh(feedZoneYDistance/feedZoneXDistance);
+                angleNZone[1] = Turret.GameStates.HOMINGLOWER;
             }else if(robotPose.getY() > VisionConsts.halfFieldY){
                 //upper half of field
                 double feedZoneXDistance = Math.abs(VisionConsts.highFeedPos[0] - estimatedPose.getX());
                 double feedZoneYDistance = Math.abs(VisionConsts.highFeedPos[1] - estimatedPose.getY());
-                return Math.tanh(feedZoneYDistance/feedZoneXDistance);
+                angleNZone[0] = Math.tanh(feedZoneYDistance/feedZoneXDistance);
+                angleNZone[1] = Turret.GameStates.HOMINGUPPER;
             }
         }
-            return 0.0;
+            return angleNZone;
     }
 }

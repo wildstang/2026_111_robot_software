@@ -13,11 +13,16 @@ import edu.wpi.first.math.geometry.Pose2d;
 public class Turret implements Subsystem{
 
     WsPose pose;
+    
+    public static enum GameStates {FIRING, HOMINGLOWER, HOMINGUPPER};
+    private GameStates turretState;
+    private double turretAngle;
 
     private WsTalon turretMotor;
 
     @Override
     public void inputUpdate(Input source) {
+
     }
 
     @Override
@@ -31,8 +36,29 @@ public class Turret implements Subsystem{
 
     @Override
     public void update() {
+        turretState = (GameStates)pose.angleOfTurretNZone()[1];
+        
+
+        switch(turretState){
+            case FIRING:
+                turretAngle = (double)pose.angleOfTurretNZone()[0];
+            break;
+
+            case HOMINGLOWER:
+                turretAngle = (double)pose.angleOfTurretNZone()[0];
+            break;
+
+            case HOMINGUPPER:
+                turretAngle = (double)pose.angleOfTurretNZone()[0];
+            break;
+        }
     }
 
+    void rotateTurret(){
+        if(turretState == GameStates.FIRING){
+            if(turretAngle )
+        }
+    }
 
 
     @Override
