@@ -44,6 +44,7 @@ public class WsPose implements Subsystem {
     
     public int currentID = 0;
     public SwerveDrive swerve;
+    private Turret turret;
 
     // WPI blue relative (m and CCW rad)
     public Pose2d odometryPose = new Pose2d();
@@ -239,7 +240,7 @@ public class WsPose implements Subsystem {
         return 0;
     }
     
-    // Returns double array with turret angle wanted and also the zone we are in: 0 for alliance zone and 1,2 for the lower and upper half of the nuetral zone
+    // Returns double array with turret angle wanted and also the zone we are in: firing game state for alliance zone and homing for neutral
     public Object[] angleOfTurretNZone(){
         Object[] angleNZone = new Object[2];
         Pose2d robotPose = estimatedPose;
@@ -269,4 +270,34 @@ public class WsPose implements Subsystem {
         }
             return angleNZone;
     }
+
+      public double distancToTarget(Translation2d target) {
+        double offsetX = target.getX() - estimatedPose.getX();
+        double offsetY = target.getY() - estimatedPose.getY();
+        return (Math.sqrt(offsetX*offsetX + offsetY*offsetY));
+    }
+
+    public boolean goodToFire(){
+        String state = (String) angleOfTurretNZone()[1];
+        if(state == "FIRING"){
+            //in alliance zone
+            if(estimatedPose.getX() <= 158.6 && estimatedPose.getX() >= 118.6 && estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
+                //right up against the hub
+                return false;
+            }
+            if(estimatedPose.getX() < 46 && estimatedPose.getY() >= 120 && estimatedPose.getY() <= 160){
+                //behind climbing area
+                return false;
+            }
+
+            }
+        if(state == "HOMINGLOWER" || state == "HOMINGUPPER"){
+             if(estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
+                //behind the hub
+                return false;
+            }
+                
+        }
+        return true;
+        }
 }
