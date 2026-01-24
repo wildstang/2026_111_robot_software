@@ -82,8 +82,8 @@ public class Turret implements Subsystem{
     }
 
 
-    public boolean goodToFire(double desiredAngle){
-        double wiggle = Math.abs(desiredAngle - turretMotor.getPosition());
+    public boolean goodToFire(){
+        double wiggle = Math.abs(desiredTurretAngle - turretMotor.getPosition());
         if(wiggle > 1){
             return false;
         }
