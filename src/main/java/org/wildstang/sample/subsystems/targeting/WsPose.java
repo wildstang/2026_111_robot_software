@@ -271,7 +271,7 @@ public class WsPose implements Subsystem {
             return angleNZone;
     }
 
-      public double distancToTarget(Translation2d target) {
+      public double distanceToTarget(Translation2d target) {
         double offsetX = target.getX() - estimatedPose.getX();
         double offsetY = target.getY() - estimatedPose.getY();
         return (Math.sqrt(offsetX*offsetX + offsetY*offsetY));
