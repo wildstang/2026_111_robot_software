@@ -9,6 +9,7 @@ import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.targeting.WsPose;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Turret implements Subsystem{
 
@@ -40,6 +41,7 @@ public class Turret implements Subsystem{
         
         desiredTurretAngle = (double)pose.angleOfTurretNZone()[0];
         turretMotor.setPosition(rotateTurret(desiredTurretAngle));
+        SmartDashboard.putString("Turrent State", turretState.name());
     }
 
     double rotateTurret(double desiredAngle){
