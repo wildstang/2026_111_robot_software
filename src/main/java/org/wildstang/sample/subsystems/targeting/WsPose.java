@@ -264,7 +264,7 @@ public class WsPose implements Subsystem {
                 double feedZoneXDistance = Math.abs(VisionConsts.highFeedPos[0] - estimatedPose.getX());
                 double feedZoneYDistance = Math.abs(VisionConsts.highFeedPos[1] - estimatedPose.getY());
                 angleNZone[0] = Math.tanh(feedZoneYDistance/feedZoneXDistance);
-                angleNZone[1] = Turret.GameStates.HOMINGUPPER;
+                angleNZone[1] = Turret.GameStates.HOMINGUPPER; 
             }
         }
             return angleNZone;

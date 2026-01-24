@@ -16,7 +16,7 @@ public class Turret implements Subsystem{
     
     public static enum GameStates {FIRING, HOMINGLOWER, HOMINGUPPER};
     private GameStates turretState;
-    private double turretAngle;
+    private double desiredTurretAngle;
 
     private WsTalon turretMotor;
 
@@ -38,28 +38,55 @@ public class Turret implements Subsystem{
     public void update() {
         turretState = (GameStates)pose.angleOfTurretNZone()[1];
         
-
-        switch(turretState){
-            case FIRING:
-                turretAngle = (double)pose.angleOfTurretNZone()[0];
-            break;
-
-            case HOMINGLOWER:
-                turretAngle = (double)pose.angleOfTurretNZone()[0];
-            break;
-
-            case HOMINGUPPER:
-                turretAngle = (double)pose.angleOfTurretNZone()[0];
-            break;
-        }
+        desiredTurretAngle = (double)pose.angleOfTurretNZone()[0];
+        turretMotor.setPosition(rotateTurret(desiredTurretAngle));
     }
 
-    void rotateTurret(){
+    double rotateTurret(double desiredAngle){
+
+        double actualAngle = 0;
+
         if(turretState == GameStates.FIRING){
-            if(turretAngle )
+            // doing logic to find out which level to go to (example: if you are above 360 and want to go to the lower coterminal angle)
+            // if there is a coterminal angle, you decide whether to rotate ccw or cw
+            if(desiredAngle <= 60){
+                if((Math.abs(turretMotor.getPosition() - desiredAngle)) 
+                    > (Math.abs(turretMotor.getPosition() - (desiredAngle+360)))){
+                        actualAngle = desiredAngle + 360;
+                }
+            }else if((desiredAngle >= 360) && (desiredAngle <= 420)){
+                if ((Math.abs(turretMotor.getPosition() - desiredAngle)) 
+                    < (Math.abs(turretMotor.getPosition() - (desiredAngle+360)))){
+                        actualAngle = Math.abs(desiredAngle-360);
+                }
+            }else{
+                actualAngle = desiredAngle;
+            }
+        }else if(turretState == GameStates.HOMINGLOWER || turretState == GameStates.HOMINGUPPER){
+            //determine which hardstop we are further from and go there (it gives us more wiggle room)
+             if(desiredAngle < 30 && desiredAngle >= 0){
+                //always rotate to higher coterminal
+                actualAngle = desiredAngle + 360;
+                
+             }else if(desiredAngle >= 420 && desiredAngle < 390){
+                //always rotate to lower coterminal
+                actualAngle = Math.abs(desiredAngle - 360);
+             }else{
+             actualAngle = desiredAngle;
+             }
         }
+
+        return actualAngle;
     }
 
+
+    public boolean goodToFire(double desiredAngle){
+        double wiggle = Math.abs(desiredAngle - turretMotor.getPosition());
+        if(wiggle > 1){
+            return false;
+        }
+        return true;
+    }
 
     @Override
     public void resetState() {
