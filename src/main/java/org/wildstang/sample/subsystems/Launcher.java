@@ -55,9 +55,6 @@ public class Launcher implements Subsystem{
 
     public boolean goodToFire;
 
-
-   
-
     @Override
     public void init() {
         flywheelPID = new PIDController(flywheelPGain, flywheelIGain, flywheelDGain);

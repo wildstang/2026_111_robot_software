@@ -5,6 +5,7 @@ import org.wildstang.sample.subsystems.Ballpath;
 import org.wildstang.sample.subsystems.Climb;
 import org.wildstang.sample.subsystems.Intake;
 import org.wildstang.sample.subsystems.Launcher;
+import org.wildstang.sample.subsystems.TestShooter;
 import org.wildstang.sample.subsystems.Turret;
 import org.wildstang.sample.subsystems.LED.LedController;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
@@ -24,7 +25,8 @@ public enum WsSubsystems implements Subsystems {
     BALLPATH("Ballpath", Ballpath.class),
     CLIMB("Climb", Climb.class),
     LAUNCHER("Launcher", Launcher.class),
-    TURRET("Turret", Turret.class)
+    TURRET("Turret", Turret.class),
+    TESTSHOOTER("Test Shooter", TestShooter.class)
     ;
 
     /**
