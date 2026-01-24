@@ -20,7 +20,7 @@ public class SwerveSignal {
     private double rotationTarget = 0;
     private Pose2d drivingPose = new Pose2d();
     private double autoMaxSpeed = 1.0;
-    public enum controlState {MANUAL, ROTLOCKED, DRIVETOPOINT, X_DRIVETOPOINT, Y_DRIVETOPOINT}
+    public enum controlState {MANUAL, ROTLOCKED, SNAKE, DRIVETOPOINT, X_DRIVETOPOINT, Y_DRIVETOPOINT}
     private controlState state = controlState.MANUAL;
     private SwerveRequest.FieldCentric driveCommand = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
@@ -41,6 +41,10 @@ public class SwerveSignal {
                 .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withTargetDirection(new Rotation2d(Math.toRadians(getRotTarget())));
             //.withTargetRateFeedforward(double) to potentially include rotation rate
+        } else if (state == controlState.SNAKE){
+            return driveLockedCommand.withVelocityX(getVertical() * DriveConstants.maxSpeed.in(MetersPerSecond))
+                .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
+                .withTargetDirection(new Rotation2d(Math.atan2(-getHorizontal(), getVertical())));
         } else if (state == controlState.DRIVETOPOINT){
             translationRequest.setTarget(getDriveToPoint(), autoMaxSpeed);
             return translationRequest;
@@ -99,6 +103,11 @@ public class SwerveSignal {
         this.drivingPose = newTarget;
         rotationTarget = newTarget.getRotation().getDegrees();
         state = controlState.Y_DRIVETOPOINT;
+    }
+    public void setSnake(double vert, double hori){
+        this.verticalSpeed = vert;
+        this.horizontalSpeed = hori;
+        state = controlState.SNAKE;
     }
     public double getVertical(){ 
         return verticalSpeed;
