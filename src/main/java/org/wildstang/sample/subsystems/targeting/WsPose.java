@@ -4,6 +4,7 @@ package org.wildstang.sample.subsystems.targeting;
 import org.wildstang.framework.subsystems.Subsystem;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.Turret;
+import org.wildstang.sample.subsystems.Turret.GameStates;
 import org.wildstang.sample.subsystems.swerve.DriveConstants;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import org.wildstang.sample.subsystems.targeting.LimelightHelpers.PoseEstimate;
@@ -243,37 +244,49 @@ public class WsPose implements Subsystem {
     // Returns double array with turret angle wanted and also the zone we are in: firing game state for alliance zone and homing for neutral
     //rather than an object[], we can probably return a GameState enum (from turret) in one method,
     //and then a second method that takes in a GameState and returns the double of the angle
-    public Object[] angleOfTurretNZone(){
-        Object[] angleNZone = new Object[2];
+    public double angleOfTurret(){
+       
+        double desiredTurretAngle = 0;
         Pose2d robotPose = estimatedPose;
         double hubXDistance = Math.abs(VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX());
         double hubYDistance = Math.abs(VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getX());
 
         if(robotPose.getX() < VisionConsts.ALLIANCE_ZONE){
             // in our alliance zone
-            angleNZone[0] = Math.tanh((hubYDistance)/hubXDistance);
-            angleNZone[1] = Turret.GameStates.FIRING;
+            desiredTurretAngle = Math.tanh((hubYDistance)/hubXDistance);
+            turret.turretState = Turret.GameStates.FIRING;
             
         }else if(robotPose.getX() > VisionConsts.ALLIANCE_ZONE){
             // in the neutral zone
-            if(robotPose.getY() < VisionConsts.halfFieldY){
-                // lowwer half of field
+            if(robotPose.getY() > VisionConsts.halfFieldY){
+                double feedZoneXDistance = Math.abs(VisionConsts.highFeedPos[0] - estimatedPose.getX());
+                double feedZoneYDistance = Math.abs(VisionConsts.highFeedPos[1] - estimatedPose.getY());
+
+                desiredTurretAngle = Math.tanh(feedZoneYDistance/feedZoneXDistance);
+                turret.turretState = Turret.GameStates.HOMING; 
+            }else if(robotPose.getY() < VisionConsts.halfFieldY){
                 double feedZoneXDistance = Math.abs(VisionConsts.lowFeedPos[0] - estimatedPose.getX());
                 double feedZoneYDistance = Math.abs(VisionConsts.lowFeedPos[1] - estimatedPose.getY());
+
+                desiredTurretAngle = Math.tanh(feedZoneYDistance/feedZoneXDistance);
+                turret.turretState = Turret.GameStates.HOMING; 
+
+            }
+                
                 //we'll also need another method for below (maybe in the turret subsystem)
                 //to get from field-centric angle to robot-centric angle.
                 //we'll need to pull in the gyro value from swerveDrive to do that
-                angleNZone[0] = Math.tanh(feedZoneYDistance/feedZoneXDistance);
-                angleNZone[1] = Turret.GameStates.HOMINGLOWER;
-            }else if(robotPose.getY() > VisionConsts.halfFieldY){
-                //upper half of field
-                double feedZoneXDistance = Math.abs(VisionConsts.highFeedPos[0] - estimatedPose.getX());
-                double feedZoneYDistance = Math.abs(VisionConsts.highFeedPos[1] - estimatedPose.getY());
-                angleNZone[0] = Math.tanh(feedZoneYDistance/feedZoneXDistance);
-                angleNZone[1] = Turret.GameStates.HOMINGUPPER; 
-            }
+                
+            
         }
-            return angleNZone;
+
+        return desiredTurretAngle;
+        
+            
+    }
+
+    public double fromFieldToRobotAngle(){
+        return angleOfTurret() - swerve.getGyroAngle();
     }
 
       public double distanceToTarget(Translation2d target) {
@@ -283,8 +296,8 @@ public class WsPose implements Subsystem {
     }
 
     public boolean goodToFire(){
-        String state = (String) angleOfTurretNZone()[1];
-        if(state == "FIRING"){
+        GameStates state = turret.turretState;
+        if(state.equals(GameStates.FIRING)){
             //in alliance zone
             if(estimatedPose.getX() <= 158.6 && estimatedPose.getX() >= 118.6 && estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
                 //right up against the hub
@@ -296,7 +309,7 @@ public class WsPose implements Subsystem {
             }
 
             }
-        if(state == "HOMINGLOWER" || state == "HOMINGUPPER"){
+        if(state.equals(GameStates.HOMING)){
              if(estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
                 //behind the hub
                 return false;
