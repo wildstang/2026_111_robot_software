@@ -3,6 +3,7 @@ package org.wildstang.sample.subsystems;
 import org.wildstang.framework.core.Core;
 import org.wildstang.framework.io.inputs.Input;
 import org.wildstang.framework.subsystems.Subsystem;
+import org.wildstang.hardware.roborio.inputs.WsDPadButton;
 import org.wildstang.hardware.roborio.inputs.WsJoystickAxis;
 import org.wildstang.hardware.roborio.inputs.WsJoystickButton;
 import org.wildstang.hardware.roborio.outputs.WsTalon;
@@ -18,12 +19,15 @@ public class TestShooter implements Subsystem{
     WsTalon hoodMotor;
 
     WsJoystickAxis operatorLT, operatorRT;
+    //dpad buttons need to be on WsDpadButton class
     WsJoystickButton operatorY, operatorA, operatorB, operatorX, DpadUp, DpadDown, DpadRight, DpadLeft, operatorLB, operatorRB;
+    
 
     double shooterSpeed;
 
     @Override
     public void init() {
+        //not important, but it's easier to use WsInputs.OPERATOR_FACE_DOWN.get() instead of Core.blahblah
         operatorA = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_FACE_DOWN);
         operatorA.addInputListener(this);
 
@@ -66,7 +70,9 @@ public class TestShooter implements Subsystem{
         flywheelMotor.setCurrentLimit(120, 70);
 
         ballpathMotor = (WsTalon) WsOutputs.BALLPATH.get();
+        //add current limit of 120,70
         turretMotor = (WsTalon) WsOutputs.TURRET.get();
+        //add current limit of 60,60
 
         hoodMotor = (WsTalon) WsOutputs.HOOD.get();
         hoodMotor.setCurrentLimit(50,50);
@@ -76,6 +82,7 @@ public class TestShooter implements Subsystem{
 
     @Override
     public void inputUpdate(Input source) {
+        //let separate these out from if-elses to just a bunch of ifs to avoid edge cases
         if(operatorLT.getValue()> 0.5){
             flywheelMotor.setSpeed(shooterSpeed);
         }else if(operatorRT.getValue() > 0.5){
@@ -88,7 +95,7 @@ public class TestShooter implements Subsystem{
             hoodMotor.setSpeed(0.5);
         }else if(operatorX.getValue()){
             hoodMotor.setSpeed(-0.5);
-        }else if(DpadUp.getValue()){
+        }else if(DpadUp.getValue()){//for each of these, also have && source == DpadUp
             shooterSpeed += 0.0025;
         }else if(DpadDown.getValue()){
             shooterSpeed -= 0.0025;
@@ -116,6 +123,9 @@ public class TestShooter implements Subsystem{
 
     @Override
     public void update() {
+        //make sure to update at least the shooter here
+        //preferrably, update all of the ballpath/turret/flywheel/hood here, and just
+        //change values in inputUpdate
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'update'");
     }
