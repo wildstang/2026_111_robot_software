@@ -20,7 +20,8 @@ public class TestShooter implements Subsystem{
 
     WsJoystickAxis operatorLT, operatorRT;
     //dpad buttons need to be on WsDpadButton class
-    WsJoystickButton operatorY, operatorA, operatorB, operatorX, DpadUp, DpadDown, DpadRight, DpadLeft, operatorLB, operatorRB;
+    WsJoystickButton operatorY, operatorA, operatorB, operatorX,  operatorLB, operatorRB;
+    WsDPadButton DpadUp, DpadDown, DpadRight, DpadLeft;
     
 
     double shooterSpeed;
@@ -46,16 +47,16 @@ public class TestShooter implements Subsystem{
         operatorRT = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.OPERATOR_RIGHT_TRIGGER);
         operatorRT.addInputListener(this);
 
-        DpadUp = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_DPAD_UP);
+        DpadUp = (WsDPadButton) Core.getInputManager().getInput(WsInputs.OPERATOR_DPAD_UP);
         DpadUp.addInputListener(this);
 
-        DpadLeft = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_DPAD_LEFT);
+        DpadLeft = (WsDPadButton) Core.getInputManager().getInput(WsInputs.OPERATOR_DPAD_LEFT);
         DpadLeft.addInputListener(this);
 
-        DpadRight = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_DPAD_RIGHT);
+        DpadRight = (WsDPadButton) Core.getInputManager().getInput(WsInputs.OPERATOR_DPAD_RIGHT);
         DpadRight.addInputListener(this);
 
-        DpadDown = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_DPAD_DOWN);
+        DpadDown = (WsDPadButton) Core.getInputManager().getInput(WsInputs.OPERATOR_DPAD_DOWN);
         DpadDown.addInputListener(this);
 
         operatorLB = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_LEFT_SHOULDER);
@@ -70,8 +71,10 @@ public class TestShooter implements Subsystem{
         flywheelMotor.setCurrentLimit(120, 70);
 
         ballpathMotor = (WsTalon) WsOutputs.BALLPATH.get();
+        ballpathMotor.setCurrentLimit(120, 70);
         //add current limit of 120,70
         turretMotor = (WsTalon) WsOutputs.TURRET.get();
+        turretMotor.setCurrentLimit(60, 60);
         //add current limit of 60,60
 
         hoodMotor = (WsTalon) WsOutputs.HOOD.get();
@@ -85,29 +88,30 @@ public class TestShooter implements Subsystem{
         //let separate these out from if-elses to just a bunch of ifs to avoid edge cases
         if(operatorLT.getValue()> 0.5){
             flywheelMotor.setSpeed(shooterSpeed);
-        }else if(operatorRT.getValue() > 0.5){
+        }if(operatorRT.getValue() > 0.5){
             ballpathMotor.setSpeed(1);
-        }else if(operatorY.getValue()){
+        }if(operatorY.getValue()){
             hoodMotor.setSpeed(0.1);
-        }else if(operatorA.getValue()){
+        }if(operatorA.getValue()){
             hoodMotor.setSpeed(-0.1);
-        }else if(operatorB.getValue()){
+        }if(operatorB.getValue()){
             hoodMotor.setSpeed(0.5);
-        }else if(operatorX.getValue()){
+        }if(operatorX.getValue()){
             hoodMotor.setSpeed(-0.5);
-        }else if(DpadUp.getValue()){//for each of these, also have && source == DpadUp
+        }if(DpadUp.getValue() && source.equals(DpadUp)){//for each of these, also have && source == DpadUp
             shooterSpeed += 0.0025;
-        }else if(DpadDown.getValue()){
+        }if(DpadDown.getValue() && source.equals(DpadDown)){
             shooterSpeed -= 0.0025;
-        }else if(DpadRight.getValue()){
+        }if(DpadRight.getValue() && source.equals(DpadRight)){
             shooterSpeed += 0.025;
-        }else if(DpadLeft.getValue()){
+        }if(DpadLeft.getValue() && source.equals(DpadLeft)){
             shooterSpeed -= 0.025;
-        }else if(operatorLB.getValue()){
+        }if(operatorLB.getValue()){
             turretMotor.setSpeed(0.1);
-        }else if(operatorRB.getValue()){
+        }if(operatorRB.getValue()){
             turretMotor.setSpeed(-0.1);
-        }else{
+        }
+        if(!source){
             flywheelMotor.setSpeed(0);
             hoodMotor.setSpeed(0);
             turretMotor.setSpeed(0);

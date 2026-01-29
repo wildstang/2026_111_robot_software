@@ -69,18 +69,17 @@ public class Turret implements Subsystem{
              if(desiredTurretAngle < 30 && desiredTurretAngle >= 0){
                 //always rotate to higher coterminal
                 actualAngle = desiredTurretAngle + 360;
-             }
-                //this needs something to handle a "between values"
-             else{
+             }else if(desiredTurretAngle < 60){
+                if(turretMotor.getPosition() > 360){
+                    actualAngle = desiredTurretAngle + 360;
+                }else if(turretMotor.getPosition() < 60){
+                    actualAngle = desiredTurretAngle;
+                }
+             }else{
                 actualAngle = desiredTurretAngle;
              }
-                //won't need this
-             
-                //always rotate to lower coterminal
                 
-                //before this, we should check for if we're in 30-60 or 360-390 that we go
-                //the close direction
-                actualAngle = desiredTurretAngle;
+    
              
         }
 
