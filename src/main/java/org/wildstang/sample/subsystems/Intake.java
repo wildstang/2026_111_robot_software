@@ -3,7 +3,10 @@ package org.wildstang.sample.subsystems;
 import org.wildstang.framework.core.Core;
 import org.wildstang.framework.io.inputs.Input;
 import org.wildstang.framework.subsystems.Subsystem;
+import org.wildstang.hardware.roborio.inputs.WsJoystickAxis;
+import org.wildstang.hardware.roborio.inputs.WsJoystickButton;
 import org.wildstang.hardware.roborio.outputs.WsTalon;
+import org.wildstang.sample.robot.WsInputs;
 import org.wildstang.sample.robot.WsOutputs;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.targeting.WsPose;
@@ -42,50 +45,55 @@ public class Intake implements Subsystem{
 
     @Override
     public void inputUpdate(Input source) {
-            if(math.abs(rightTrigger.getValue()) > 0 || math.abs(rightShoulder.getValue()) > 0){
-                    //forward = true;
-                    //backwards = false;
-                    direction = IntakeState.INTAKING;
-            }
-          /*   else{
-                forward = false;
-                backwards = false;
-            } */
-            else if((math.abs(leftTrigger.getValue()) > 0 || math.abs(leftShoulder().getValue()) > 0 || math.abs(operatorLeftTrigger.getValue()) > 0 || math.abs(operatorLeftShoulder.getValue()) > 0 || math.abs(operatorRightShoulder.getValue()) > 0) && (goodToFire())){
-               // forward = true;
-               // backwards = false;
-                direction = IntakeState.INTAKING;
-            }
+        if(Math.abs(rightTrigger.getValue()) > 0 || rightShoulder.getValue()){
+            //forward = true;
+            //backwards = false;
+            direction = IntakeState.INTAKING;
+        }
+        /* else{
+            forward = false;
+            backwards = false;
+        } */
+       //I think we'll eventually want this to be running slower than the above intake, something like 0.25
+       //So this will be a fourth IntakeState
+        else if((Math.abs(leftTrigger.getValue()) > 0 || Math.abs(operatorLeftTrigger.getValue()) > 0 || 
+                operatorLeftShoulder.getValue() || operatorRightShoulder.getValue()) && (goodToFire())){
+            // forward = true;
+            // backwards = false;
+            direction = IntakeState.INTAKING;
+        }
                 
           /*   else{forward=false; backwards = false;} */
-        else if(operatorB){
+        else if(operatorB.getValue()){
            // backwards = true;
            // forward = false;
+           //I think you want REVERSE below
            direction = IntakeState.INTAKING;
         }  
         else{
             direction = IntakeState.NEUTRAL;
         }
        // else{forward = false;backwards = false;}
-          if(operatorX){
-           // in = true;
+        
+       if(operatorX.getValue()){
+            //in = true;
             //out = false;
             //stowed = false;
             deploy = DeployState.IN;
-          }  
+        }  
      
-          if(math.abs(rightTrigger.getValue()) > 0 || math.abs(rightShoulder.getValue()) > 0){
-                //out = true;
-                //in = false;
-                //stowed = false;
-                deploy = DeployState.OUT;
-          }
-          else if(math.abs(leftTrigger.getValue()) > 0){
+        if(Math.abs(rightTrigger.getValue()) > 0 || rightShoulder.getValue()){
+            //out = true;
+            //in = false;
+            //stowed = false;
+            deploy = DeployState.OUT;
+        }
+        else if(Math.abs(leftTrigger.getValue()) > 0){
             //stowed = true;
             //in = false;
             //out = false;
             deploy = DeployState.STOWED;
-          }
+        }
 
     }
 
@@ -93,6 +101,8 @@ public class Intake implements Subsystem{
     public void init() {
         intakeMotor = (WsTalon) WsOutputs.INTAKE.get();
         deployMotor = (WsTalon) WsOutputs.INTAKE_DEPLOY.get();
+        //we'll need to do some motor initializing here, intake_deploy PID and current limits for both of them
+
         rightTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.DRIVER_RIGHT_TRIGGER);
         rightTrigger.addInputListener(this);
         leftTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.DRIVER_LEFT_TRIGGER);
@@ -131,13 +141,13 @@ public class Intake implements Subsystem{
         else{
            intakeMotor.setSpeed(0.0);
         }
-        if(deploy = DeployState.IN){
+        if(deploy == DeployState.IN){
             deployMotor.setPosition(-1.0);
         }
-        if(deploy = DeployState.OUT){
+        if(deploy == DeployState.OUT){
             deployMotor.setPosition(0.0);
         }
-        if(deploy = DeployState.STOWED){
+        if(deploy == DeployState.STOWED){
             deployMotor.setPosition(-0.5);
         }
     }
@@ -156,6 +166,10 @@ public class Intake implements Subsystem{
     @Override
     public String getName() {
         return "Intake";
+    }
+    public boolean goodToFire(){
+        //we'll eventually replace with goodToFire methods from launcher, turret, and pose
+        return true;
     }
     
 }
