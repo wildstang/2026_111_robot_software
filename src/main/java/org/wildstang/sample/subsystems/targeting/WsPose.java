@@ -279,14 +279,14 @@ public class WsPose implements Subsystem {
                 
             
         }
-
+        desiredTurretAngle = (desiredTurretAngle + 360) % 360;
         return desiredTurretAngle;
         
             
     }
 
     public double fromFieldToRobotAngle(){
-        return angleOfTurret() - swerve.getGyroAngle();
+        return angleOfTurret() - swerve.getGyroAngle() - VisionConsts.turretOffset;
     }
 
       public double distanceToTarget(Translation2d target) {

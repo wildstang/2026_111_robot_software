@@ -22,5 +22,6 @@ public class VisionConsts {
     public static final double[] lowFeedPos = {79,76}; 
     public static final double[] highFeedPos = {79,214.7}; 
     public static final double robotGyroConstantThingy = 0; //Where 0 is on the robot based on what we make it
+    public static final double turretOffset = 1; //in degrees
 
 }
