@@ -135,7 +135,6 @@ public class WsPose implements Subsystem {
        turret.desiredTurretAngle = Math.atan(dnewy/dnewx);
 
        
-
         
         
 
@@ -272,7 +271,10 @@ public class WsPose implements Subsystem {
     
     // Returns double array with turret angle wanted and also the zone we are in: firing game state for alliance zone and homing for neutral
     //rather than an object[], we can probably return a GameState enum (from turret) in one method,
-    //and then a second method tha        double desiredTurretAngle = 0;
+    //and then a second method that takes in a GameState and returns the double of the angle
+    public double angleOfTurret(){
+       
+        double desiredTurretAngle = 0;
         Pose2d robotPose = estimatedPose;
         double hubXDistance = Math.abs(VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX());
         double hubYDistance = Math.abs(VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getX());
