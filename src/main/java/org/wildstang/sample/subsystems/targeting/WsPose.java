@@ -10,6 +10,7 @@ import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import org.wildstang.sample.subsystems.targeting.LimelightHelpers.PoseEstimate;
 
 import java.util.Optional;
+import java.util.Vector;
 
 import org.wildstang.framework.core.Core;
 
@@ -85,7 +86,6 @@ public class WsPose implements Subsystem {
     @Override
     public void update() {
         object.update();
-
         int bestIndex = -1;
         double bestStdDev = Double.MAX_VALUE;
         PoseEstimate bestEstimate = null;
@@ -110,6 +110,36 @@ public class WsPose implements Subsystem {
 
         odometryPosePublisher.set(odometryPose);
         estimatedPosePublisher.set(estimatedPose);
+
+
+        //shoot on da move
+        double dix = VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX();
+        double diy = VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getY();
+        double dih = Math.sqrt(dix*dix + diy*diy);
+        double robotVelx = swerve.getSpeeds().vxMetersPerSecond;
+        double robotVely = swerve.getSpeeds().vyMetersPerSecond;
+        
+        double dnewx = dix + robotVelx * getTof(dih);
+        double dnewy = diy + robotVely * getTof(dih);
+        double dnew = Math.sqrt(dnewx*dnewx + dnewy*dnewy);
+        double percentdiff = (dnew - dih)/dih;
+        double count = 0;
+        double dnewTof = getTof(dnew);
+        while((percentdiff >= 0.02) || (count <= 6  )){
+            count++;
+            dnewx = dix + robotVelx * dnewTof;
+            dnewy = diy + robotVely * dnewTof;
+            dnew = Math.sqrt(dnewx*dnewx + dnewy * dnewy);
+            dnewTof = getTof(dnew);
+        }
+       turret.desiredTurretAngle = Math.atan(dnewy/dnewx);
+
+       
+
+        
+        
+
+        
     }
 
     public double getStdDev(Optional<PoseEstimate> estimate) {
@@ -168,7 +198,6 @@ public class WsPose implements Subsystem {
     }
 
     // YEAR SUBSYSTEM ACCESS METHODS
-
 
     /**
      * Can the object detection camera see a coral
@@ -243,10 +272,7 @@ public class WsPose implements Subsystem {
     
     // Returns double array with turret angle wanted and also the zone we are in: firing game state for alliance zone and homing for neutral
     //rather than an object[], we can probably return a GameState enum (from turret) in one method,
-    //and then a second method that takes in a GameState and returns the double of the angle
-    public double angleOfTurret(){
-       
-        double desiredTurretAngle = 0;
+    //and then a second method tha        double desiredTurretAngle = 0;
         Pose2d robotPose = estimatedPose;
         double hubXDistance = Math.abs(VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX());
         double hubYDistance = Math.abs(VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getX());
@@ -318,4 +344,18 @@ public class WsPose implements Subsystem {
         }
         return true;
         }
+
+     
+
+    private double getTof(double distance){
+        int last = VisionConsts.distance.length - 1;
+        if (distance < VisionConsts.distance[0]) return VisionConsts.tof[0];
+        for (int i = 1; i < VisionConsts.distance.length; i++){
+            if (distance < VisionConsts.distance[i]){
+                return VisionConsts.tof[i-1] + (VisionConsts.tof[i]-VisionConsts.tof[i-1])*(distance-VisionConsts.distance[i-1])/(VisionConsts.distance[i]-VisionConsts.distance[i-1]);
+            }
+        }
+        return VisionConsts.tof[last] + (distance-VisionConsts.distance[last])*(VisionConsts.tof[last]-VisionConsts.tof[last-1])/(VisionConsts.distance[last]-VisionConsts.distance[last-1]);
+    
+    }
 }
