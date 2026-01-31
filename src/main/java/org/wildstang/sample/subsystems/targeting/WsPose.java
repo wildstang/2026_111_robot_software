@@ -62,6 +62,8 @@ public class WsPose implements Subsystem {
     private SwerveModulePosition[] lastWheelPositions = {};
     private Rotation2d lastGyroAngle = new Rotation2d();
 
+    public double angleToHub;
+
     @Override
     public void inputUpdate(Input source) {
     }
@@ -132,12 +134,7 @@ public class WsPose implements Subsystem {
             dnew = Math.sqrt(dnewx*dnewx + dnewy * dnewy);
             dnewTof = getTof(dnew);
         }
-       turret.desiredTurretAngle = Math.atan(dnewy/dnewx);
-
-       
-        
-        
-
+        angleToHub = Math.atan(dnewy/dnewx);
         
     }
 

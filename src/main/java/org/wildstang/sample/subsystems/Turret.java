@@ -6,6 +6,7 @@ import org.wildstang.framework.subsystems.Subsystem;
 import org.wildstang.hardware.roborio.outputs.WsTalon;
 import org.wildstang.sample.robot.WsOutputs;
 import org.wildstang.sample.robot.WsSubsystems;
+import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import org.wildstang.sample.subsystems.targeting.WsPose;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -19,6 +20,7 @@ public class Turret implements Subsystem{
     public static enum GameStates {FIRING, HOMING};
     public GameStates turretState;
     public double desiredTurretAngle;
+    public SwerveDrive swerve;
 
     private WsTalon turretMotor;
 
@@ -31,6 +33,7 @@ public class Turret implements Subsystem{
     public void init() {
         turretMotor = (WsTalon) WsOutputs.TURRET.get();
         pose = (WsPose) Core.getSubsystemManager().getSubsystem(WsSubsystems.WS_POSE);
+        swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
     }
 
     @Override
@@ -39,7 +42,13 @@ public class Turret implements Subsystem{
 
     @Override
     public void update() {
-        desiredTurretAngle = pose.fromFieldToRobotAngle();
+        if(swerve.speedMagnitude() < 0.05){
+            desiredTurretAngle = pose.fromFieldToRobotAngle();
+        }
+        else{
+            desiredTurretAngle = pose.angleToHub;
+        }
+        
         turretMotor.setPosition(rotateTurret());
         SmartDashboard.putString("Turrent State", turretState.name());
     }
