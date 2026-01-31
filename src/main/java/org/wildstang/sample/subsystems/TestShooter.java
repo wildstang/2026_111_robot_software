@@ -88,17 +88,27 @@ public class TestShooter implements Subsystem{
         //let separate these out from if-elses to just a bunch of ifs to avoid edge cases
         if(operatorLT.getValue()> 0.5){
             flywheelMotor.setSpeed(shooterSpeed);
-        }if(operatorRT.getValue() > 0.5){
+        }
+        else{
+            flywheelMotor.setSpeed(0);
+        }
+        if(operatorRT.getValue() > 0.5){
             ballpathMotor.setSpeed(1);
-        }if(operatorY.getValue()){
+        }else{
+            ballpathMotor.setSpeed(0);
+        }
+        if(operatorY.getValue()){
             hoodMotor.setSpeed(0.1);
-        }if(operatorA.getValue()){
+        }else if(operatorA.getValue()){
             hoodMotor.setSpeed(-0.1);
-        }if(operatorB.getValue()){
+        }else if(operatorB.getValue()){
             hoodMotor.setSpeed(0.5);
-        }if(operatorX.getValue()){
+        }else if(operatorX.getValue()){
             hoodMotor.setSpeed(-0.5);
-        }if(DpadUp.getValue() && source.equals(DpadUp)){//for each of these, also have && source == DpadUp
+        }else{
+            hoodMotor.setSpeed(0);
+        }
+        if(DpadUp.getValue() && source.equals(DpadUp)){//for each of these, also have && source == DpadUp
             shooterSpeed += 0.0025;
         }if(DpadDown.getValue() && source.equals(DpadDown)){
             shooterSpeed -= 0.0025;
@@ -108,15 +118,13 @@ public class TestShooter implements Subsystem{
             shooterSpeed -= 0.025;
         }if(operatorLB.getValue()){
             turretMotor.setSpeed(0.1);
-        }if(operatorRB.getValue()){
+        }else if(operatorRB.getValue()){
             turretMotor.setSpeed(-0.1);
         }
-        if(!source){
-            flywheelMotor.setSpeed(0);
-            hoodMotor.setSpeed(0);
+        else{
             turretMotor.setSpeed(0);
-            ballpathMotor.setSpeed(0);
         }
+      
     }
 
     @Override
