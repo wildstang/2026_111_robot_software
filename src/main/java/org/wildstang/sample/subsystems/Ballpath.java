@@ -38,6 +38,7 @@ public class Ballpath implements Subsystem{
 
     @Override
     public void init() {
+        
         ballpathMotor = (WsTalon) WsOutputs.BALLPATH.get();
 
         operatorA = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_FACE_LEFT);
@@ -58,7 +59,9 @@ public class Ballpath implements Subsystem{
         operatorRS = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_RIGHT_JOYSTICK_BUTTON);
         operatorRS.addInputListener(this);
 
-
+        launcher = (Launcher) Core.getSubsystemManager().getSubsystem(WsSubsystems.LAUNCHER);
+        turret = (Turret) Core.getSubsystemManager().getSubsystem(WsSubsystems.TURRET);
+        pose = (WsPose) Core.getSubsystemManager().getSubsystem(WsSubsystems.WS_POSE);
 
     }
 

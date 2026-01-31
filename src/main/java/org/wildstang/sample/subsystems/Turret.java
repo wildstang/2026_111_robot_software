@@ -30,6 +30,7 @@ public class Turret implements Subsystem{
     @Override
     public void init() {
         turretMotor = (WsTalon) WsOutputs.TURRET.get();
+        pose = (WsPose) Core.getSubsystemManager().getSubsystem(WsSubsystems.WS_POSE);
     }
 
     @Override
