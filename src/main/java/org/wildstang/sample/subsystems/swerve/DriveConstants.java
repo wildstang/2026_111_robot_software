@@ -78,9 +78,9 @@ public final class DriveConstants {
     //this is equal to module teeth divided by drive motor pinion teeth, 2910 had 54/12
     private static final double coupleRatio = 3.81818181818181813;
     //drive gear ratio
-    private static final double driveRatio = 7.3636363636;
+    private static final double driveRatio = 5.4;
     //steer gear ratio
-    private static final double steerRatio = 15.42857142857143;
+    private static final double steerRatio = 12.1;
     //empirically find this, 2910 had 1.95
     private static final double wheelRadius = 2.167;
     private static final boolean invertLeft = false;
@@ -92,13 +92,13 @@ public final class DriveConstants {
 
     //bevel gear points to the left
     //find magnet offset
-    private static final double FL_encoderOffset = 0.0;
+    private static final double FL_encoderOffset = 0.2644;
     //find magnet offset
-    private static final double FR_encoderOffset = 0.0;
+    private static final double FR_encoderOffset = 0.2830;
     //find magnet offset
-    private static final double BL_encoderOffset = 0.0;
+    private static final double BL_encoderOffset = -0.0681;
     //find magnet offset
-    private static final double BR_encoderOffset = 0.0;
+    private static final double BR_encoderOffset = -0.0056;
 
     public static final SwerveDrivetrainConstants swerveCTREconsts = new SwerveDrivetrainConstants()
         .withCANBusName(canBus.getName()).
