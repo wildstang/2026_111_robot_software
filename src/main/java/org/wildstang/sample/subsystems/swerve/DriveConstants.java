@@ -74,21 +74,21 @@ public final class DriveConstants {
     public static final CANBus canBus = new CANBus("drive_canivore", "./logs/example.hoot");
     
     //find this from swerve website
-    public static final LinearVelocity maxSpeed = MetersPerSecond.of(4.54);
-    //this is equal to module teeth divided by drive motor pinion teeth, 2910 had 54/12
-    private static final double coupleRatio = 3.81818181818181813;
+    public static final LinearVelocity maxSpeed = MetersPerSecond.of(5.90);
+    //this is equal to module teeth divided by drive motor pinion teeth, we are 88/12
+    private static final double coupleRatio = 88.0/12.0;
     //drive gear ratio
     private static final double driveRatio = 5.4;
     //steer gear ratio
     private static final double steerRatio = 12.1;
     //empirically find this, 2910 had 1.95
-    private static final double wheelRadius = 2.167;
+    private static final double wheelRadius = 1.95;
     private static final boolean invertLeft = false;
     private static final boolean invertRight = true;
     //width to center of wheel
-    private static final double halfWidth = 13;
+    private static final double halfWidth = 12.25;
     //length to center of wheel
-    private static final double halfLength = 13;
+    private static final double halfLength = 9.75;
 
     //bevel gear points to the left
     //find magnet offset
@@ -117,9 +117,9 @@ public final class DriveConstants {
             .withSlipCurrent(slipCurrent)
             .withSpeedAt12Volts(maxSpeed)
             .withDriveFrictionVoltage(0.25)
-            .withSteerFrictionVoltage(0.001)
-            .withDriveInertia(0.001)
-            .withSteerInertia(0.00001)
+            .withSteerFrictionVoltage(0.2)
+            .withDriveInertia(0.01)
+            .withSteerInertia(0.01)
             .withDriveMotorType(driveType)
             .withSteerMotorType(steertype)
             .withFeedbackSource(steerEncoder)

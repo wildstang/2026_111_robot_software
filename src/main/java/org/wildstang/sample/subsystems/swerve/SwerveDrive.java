@@ -21,6 +21,7 @@ import org.wildstang.hardware.roborio.inputs.WsJoystickAxis;
 import org.wildstang.hardware.roborio.inputs.WsJoystickButton;
 import org.wildstang.sample.robot.WsInputs;
 import org.wildstang.sample.robot.WsSubsystems;
+import org.wildstang.sample.subsystems.swerve.SwerveSignal.controlState;
 import org.wildstang.sample.subsystems.targeting.VisionConsts;
 import org.wildstang.sample.subsystems.targeting.WsPose;
 
@@ -77,6 +78,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
 
     private WsSwerveHelper swerveHelper = new WsSwerveHelper();
     StructArrayPublisher<SwerveModuleState> moduleStatePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("ModuleStates", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> moduleIdealPublisher = NetworkTableInstance.getDefault().getStructArrayTopic("Module real states", SwerveModuleState.struct).publish();
     public ChassisSpeeds speeds;
 
 
@@ -104,9 +106,8 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         if (driveState == DriveType.AUTO) driveState = DriveType.TELEOP;
 
         //get x and y speeds
-        horizontalPower = swerveHelper.scaleDeadband(leftStickHorizontal.getValue(), DriveConstants.DEADBAND);
+        horizontalPower = -swerveHelper.scaleDeadband(leftStickHorizontal.getValue(), DriveConstants.DEADBAND);
         verticalPower = swerveHelper.scaleDeadband(leftStickVertical.getValue(), DriveConstants.DEADBAND);
-        
         
         //reset gyro
         if (source == select && select.getValue()) {
@@ -146,7 +147,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         double rotSpeed = rightStickHorizontal.getValue()*Math.abs(rightStickHorizontal.getValue());
         rotSpeed = swerveHelper.scaleDeadband(rotSpeed, DriveConstants.DEADBAND);
         //if the rotational joystick is being used, the robot should not be auto tracking heading
-        if (rotSpeed != 0) {
+        if (rotSpeed != 0 || swerveSignal.currentState() == controlState.MANUAL) {
             swerveSignal.setFreeRotation(rotSpeed);
         }
     }
@@ -260,6 +261,14 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         }
             
         swerve.setControl(swerveSignal.drive());
+        SmartDashboard.putNumber("* fl target angle", swerve.getModule(0).getTargetState().angle.getRotations());
+        SmartDashboard.putNumber("* fr target angle", swerve.getModule(1).getTargetState().angle.getRotations());
+        SmartDashboard.putNumber("* bl target angle", swerve.getModule(2).getTargetState().angle.getRotations());
+        SmartDashboard.putNumber("* br target angle", swerve.getModule(3).getTargetState().angle.getRotations());
+        SmartDashboard.putNumber("* fl encoder angle", swerve.getModule(0).getEncoder().getAbsolutePosition().getValueAsDouble());
+        SmartDashboard.putNumber("* fr encoder angle", swerve.getModule(1).getEncoder().getAbsolutePosition().getValueAsDouble());
+        SmartDashboard.putNumber("* bl encoder angle", swerve.getModule(2).getEncoder().getAbsolutePosition().getValueAsDouble());
+        SmartDashboard.putNumber("* br encoder angle", swerve.getModule(3).getEncoder().getAbsolutePosition().getValueAsDouble());
         SmartDashboard.putNumber("X Power", horizontalPower);
         SmartDashboard.putNumber("Y Power", verticalPower);
         SmartDashboard.putNumber("# Robot X", pose.estimatedPose.getX());
@@ -267,7 +276,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         SmartDashboard.putNumber("Gyro Reading", getGyroAngle());
         SmartDashboard.putNumber("rotSpeed", swerveSignal.getRotation());
         SmartDashboard.putString("Drive mode", driveState.toString());
-        SmartDashboard.putString("Drive Control", swerveSignal.currentState());
+        SmartDashboard.putString("Drive Control", swerveSignal.currentState().toString());
         SmartDashboard.putNumber("Rotation target", swerveSignal.getRotTarget());
         SmartDashboard.putNumber("Yaw", swerve.getPigeon2().getYaw().getValueAsDouble());
         SmartDashboard.putNumber("Roll", swerve.getPigeon2().getRoll().getValueAsDouble());
@@ -278,6 +287,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
             targetPosePublisher.set(targetPose);
         }
         moduleStatePublisher.set(moduleStates());
+        moduleIdealPublisher.set(modulesStatesSim());
     }
     
     @Override
@@ -345,6 +355,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         setToAuto();
 
         // Make degrees clockwise
+        gyroReading = degrees;
         swerve.resetRotation(new Rotation2d(Math.toRadians(degrees)));
     }
 
@@ -377,9 +388,9 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         return new SwerveModuleState[]{swerve.getModule(0).getCurrentState(), swerve.getModule(1).getCurrentState(), 
             swerve.getModule(2).getCurrentState(), swerve.getModule(3).getCurrentState()};
     }
-
-    private boolean frontCloser(double targetAngle) {
-        return (WsSwerveHelper.angleDist(targetAngle, getGyroAngle()) < 90);
+    public SwerveModuleState[] modulesStatesSim(){
+        return new SwerveModuleState[]{swerve.getModule(0).getTargetState(), swerve.getModule(1).getTargetState(),
+            swerve.getModule(2).getTargetState(), swerve.getModule(3).getTargetState()};
     }
 
     // SUBSYSTEM ACCESS METHODS

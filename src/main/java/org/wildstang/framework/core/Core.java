@@ -272,19 +272,27 @@ public class Core {
         SmartDashboard.putBoolean("isBlue", isBlue());
         isBlueToggle = isBlue();
 
-
+        long starttime = System.currentTimeMillis();
 
         // Read input from hardware
         s_inputManager.update();
 
+        long postInput = System.currentTimeMillis();
+        SmartDashboard.putNumber("Input time", postInput-starttime);
         // Update the AutoPrograms, most of the time this is just sleeper
         s_autoManager.update();
+        long postAuto = System.currentTimeMillis();
+        SmartDashboard.putNumber("Auto time", postAuto - postInput);
 
         // Let subsystems react to changes
         s_subsystemManager.update();
+        long postSub = System.currentTimeMillis();
+        SmartDashboard.putNumber("Subsystem time", postSub-postAuto);
 
         // Update outputs - send data to devices
         s_outputManager.update();
+        long postOut = System.currentTimeMillis();
+        SmartDashboard.putNumber("Output time", postOut-postSub);
     }
 
 }

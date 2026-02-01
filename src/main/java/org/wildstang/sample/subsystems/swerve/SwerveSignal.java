@@ -12,6 +12,7 @@ import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SwerveSignal {
     private double verticalSpeed = 0;
@@ -60,14 +61,14 @@ public class SwerveSignal {
                 .withRotationalRate(getRotation() * RotationsPerSecond.of(0.75).in(RadiansPerSecond));
         }
     }
-    public SwerveSignal(double vert, double hori, double rot){
+    public SwerveSignal(double hori, double vert, double rot){
         this.verticalSpeed = vert;
         this.horizontalSpeed = hori;
         this.rotationSpeed = rot;
         driveLockedCommand.HeadingController = new PhoenixPIDController(DriveConstants.heading_P, 0.0, DriveConstants.heading_D);
         driveLockedCommand.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
     }
-    public void setTranslation(double vert, double hori){
+    public void setTranslation(double hori, double vert){
         this.verticalSpeed = vert;
         this.horizontalSpeed = hori;
         if (state != controlState.ROTLOCKED) state = controlState.MANUAL;
@@ -124,8 +125,8 @@ public class SwerveSignal {
     public Pose2d getDriveToPoint(){
         return drivingPose;
     }
-    public String currentState(){
-        return state.toString();
+    public controlState currentState(){
+        return state;
     }
     public boolean isRotLocked(){
         return state == controlState.ROTLOCKED;
