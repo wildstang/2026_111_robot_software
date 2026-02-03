@@ -25,10 +25,10 @@ public class SwerveSignal {
     private controlState state = controlState.MANUAL;
     private SwerveRequest.FieldCentric driveCommand = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-        .withSteerRequestType(SteerRequestType.MotionMagicExpo);
+        .withSteerRequestType(SteerRequestType.Position);
     private SwerveRequest.FieldCentricFacingAngle driveLockedCommand = new SwerveRequest.FieldCentricFacingAngle()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-        .withSteerRequestType(SteerRequestType.MotionMagicExpo);
+        .withSteerRequestType(SteerRequestType.Position);
     private TranslationRequest translationRequest = new TranslationRequest();
     private XTranslationRequest xTranslationRequest = new XTranslationRequest();
     private YTranslationRequest yTranslationRequest = new YTranslationRequest();    

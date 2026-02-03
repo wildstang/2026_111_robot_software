@@ -47,11 +47,11 @@ public final class DriveConstants {
 
     //steer PID values
     private static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(100).withKI(0).withKD(0.5).withKS(0.1).withKV(1.91).withKA(0)
+        .withKP(0).withKI(0).withKD(0.0).withKS(0.0).withKV(0).withKA(0)
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     //drive PID values
     private static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(0.1).withKI(0).withKD(0).withKS(0).withKV(0.124);
+        .withKP(0.0).withKI(0).withKD(0).withKS(0).withKV(0.0);
     private static final ClosedLoopOutputType steerClosedLoopOutput = ClosedLoopOutputType.Voltage;
     private static final ClosedLoopOutputType driveClosedLoopOutput = ClosedLoopOutputType.Voltage;
     private static final DriveMotorArrangement driveType = DriveMotorArrangement.TalonFX_Integrated;
@@ -74,9 +74,9 @@ public final class DriveConstants {
     public static final CANBus canBus = new CANBus("drive_canivore", "./logs/example.hoot");
     
     //find this from swerve website
-    public static final LinearVelocity maxSpeed = MetersPerSecond.of(5.90);
+    public static final LinearVelocity maxSpeed = MetersPerSecond.of(5.72);
     //this is equal to module teeth divided by drive motor pinion teeth, we are 88/12
-    private static final double coupleRatio = 88.0/12.0;
+    private static final double coupleRatio = 4.5;
     //drive gear ratio
     private static final double driveRatio = 5.4;
     //steer gear ratio
@@ -92,13 +92,13 @@ public final class DriveConstants {
 
     //bevel gear points to the left
     //find magnet offset
-    private static final double FL_encoderOffset = 0.2644;
+    private static final double FL_encoderOffset = 0.2648;
     //find magnet offset
-    private static final double FR_encoderOffset = 0.2830;
+    private static final double FR_encoderOffset = -0.2236;
     //find magnet offset
-    private static final double BL_encoderOffset = -0.0681;
+    private static final double BL_encoderOffset = -0.4353;
     //find magnet offset
-    private static final double BR_encoderOffset = -0.0056;
+    private static final double BR_encoderOffset = -0.0054;
 
     public static final SwerveDrivetrainConstants swerveCTREconsts = new SwerveDrivetrainConstants()
         .withCANBusName(canBus.getName()).
