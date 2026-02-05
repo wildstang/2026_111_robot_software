@@ -43,9 +43,15 @@ public class SwerveSignal {
                 .withTargetDirection(new Rotation2d(Math.toRadians(getRotTarget())));
             //.withTargetRateFeedforward(double) to potentially include rotation rate
         } else if (state == controlState.SNAKE){
-            return driveLockedCommand.withVelocityX(getVertical() * DriveConstants.maxSpeed.in(MetersPerSecond))
+            if (getVertical() != 0 || getHorizontal() != 0) {
+                setRotTarget(Math.toDegrees(Math.atan2(getHorizontal(), getVertical())));
+                return driveLockedCommand.withVelocityX(getVertical() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withTargetDirection(new Rotation2d(Math.atan2(getHorizontal(), getVertical())));
+            }
+            return driveLockedCommand.withVelocityX(getVertical() * DriveConstants.maxSpeed.in(MetersPerSecond))
+                .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
+                .withTargetDirection(new Rotation2d(Math.toRadians(getRotTarget())));
         } else if (state == controlState.DRIVETOPOINT){
             translationRequest.setTarget(getDriveToPoint(), autoMaxSpeed);
             return translationRequest;
@@ -58,7 +64,7 @@ public class SwerveSignal {
         } else {//} else if (state == controlState.MANUAL){
             return driveCommand.withVelocityX(getVertical() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
-                .withRotationalRate(getRotation() * RotationsPerSecond.of(0.35).in(RadiansPerSecond));
+                .withRotationalRate(getRotation() * Math.abs(getRotation()) * RotationsPerSecond.of(0.35).in(RadiansPerSecond));
         }
     }
     public SwerveSignal(double hori, double vert, double rot){
@@ -79,6 +85,9 @@ public class SwerveSignal {
     }
     public void setRotLocked(double rotation){
         state = controlState.ROTLOCKED;
+        rotationTarget = rotation;
+    }
+    private void setRotTarget(double rotation){
         rotationTarget = rotation;
     }
     public void setDriveToPoint(Pose2d newTarget){

@@ -41,9 +41,9 @@ public final class DriveConstants {
     public static final double DRIVE_F_I = 0.000;//
 
     //heading PID value
-    public static final double heading_P = 0.5;
+    public static final double heading_P = 0.2;
     //heading PID value
-    public static final double heading_D = 0.5;
+    public static final double heading_D = 0.0;
 
     //steer PID values
     private static final Slot0Configs steerGains = new Slot0Configs()

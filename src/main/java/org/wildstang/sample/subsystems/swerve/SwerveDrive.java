@@ -63,7 +63,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     private WsJoystickAxis operatorLeftTrigger;
     private WsJoystickButton operatorX;
 
-    private double gyroReading; // Reading from gyro CCW degrees
+    //private double gyroReading; // Reading from gyro CCW degrees
 
     private double horizontalPower;
     private double verticalPower;
@@ -111,11 +111,11 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         
         //reset gyro
         if (source == select && select.getValue()) {
-            gyroReading = 0;
-            swerve.getPigeon2().setYaw(0);
-            // while (swerve.getState().Pose.getRotation().getDegrees() > 0.1 || swerve.getState().Pose.getRotation().getDegrees() < -0.1){
-            //     swerve.resetRotation(new Rotation2d(0));
-            // }
+            //gyroReading = 0;
+            //swerve.getPigeon2().setYaw(0);
+            while (swerve.getState().Pose.getRotation().getDegrees() > 0.1 || swerve.getState().Pose.getRotation().getDegrees() < -0.1){
+                swerve.resetRotation(new Rotation2d(0));
+            }
             swerveSignal.setRotLocked(0);
         }
 
@@ -153,6 +153,12 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         //if the rotational joystick is being used, the robot should not be auto tracking heading
         if (rotSpeed != 0 || swerveSignal.currentState() == controlState.MANUAL) {
             swerveSignal.setFreeRotation(rotSpeed);
+        }
+        if (faceLeft.getValue()){
+            swerve.resetTranslation(new Translation2d(5.0, 4.0));
+        }
+        if (faceRight.getValue()){
+            swerve.resetTranslation(new Translation2d(2.0, 5.0));
         }
     }
  
@@ -218,7 +224,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
 
     @Override
     public void update() {
-        gyroReading = (swerve.getPigeon2().getYaw().getValueAsDouble());
+        //gyroReading = (swerve.getPigeon2().getYaw().getValueAsDouble());
         Logger.processInputs("Swerve", this);
         pose.addOdometryObservation(swerve.getState().Pose);
         // Reset coral point
@@ -276,6 +282,8 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         SmartDashboard.putNumber("Y Power", verticalPower);
         SmartDashboard.putNumber("# Robot X", pose.estimatedPose.getX());
         SmartDashboard.putNumber("# Robot Y", pose.estimatedPose.getY());
+        SmartDashboard.putNumber("* swerve X pos", swerve.getState().Pose.getX());
+        SmartDashboard.putNumber("* swerve Y pos", swerve.getState().Pose.getY());
         SmartDashboard.putNumber("rotSpeed", swerveSignal.getRotation());
                 SmartDashboard.putNumber("Gyro Reading", swerve.getState().Pose.getRotation().getDegrees());//getGyroAngle());
         SmartDashboard.putString("Drive mode", driveState.toString());
@@ -286,8 +294,6 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         SmartDashboard.putNumber("Pitch", swerve.getPigeon2().getPitch().getValueAsDouble());
         SmartDashboard.putNumber("@ mega2 gyro", getMegaTag2Yaw());
         SmartDashboard.putNumber("@ speed", speedMagnitude());
-        SmartDashboard.putNumber("* fl raw steer", swerve.getModule(0).getSteerMotor().getPosition().getValueAsDouble());
-        SmartDashboard.putString("* control", swerveSignal.drive().toString());
         if (targetPose != null){
             targetPosePublisher.set(targetPose);
         }
@@ -297,7 +303,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     
     @Override
     public void resetState() {
-        gyroReading = 0;
+        //gyroReading = 0;
         horizontalPower = 0;
         verticalPower = 0;
         swerveSignal.setFreeRotation(0);
@@ -360,13 +366,13 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         setToAuto();
 
         // Make degrees clockwise
-        gyroReading = degrees;
-        swerve.getPigeon2().setYaw(degrees);
-        //swerve.resetRotation(new Rotation2d(Math.toRadians(degrees)));
+        //gyroReading = degrees;
+        //swerve.getPigeon2().setYaw(degrees);
+        swerve.resetRotation(new Rotation2d(Math.toRadians(degrees)));
     }
 
     public double getGyroAngle() {
-        return gyroReading;
+        return swerve.getState().Pose.getRotation().getDegrees();
     }  
 
     /**
@@ -374,13 +380,13 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
      * @return Returns the field relative CCW gyro angle for use with Limelight MegaTag2
      */
     public double getMegaTag2Yaw(){
-        return (Math.toDegrees(swerve.getPigeon2().getYaw().getValueAsDouble()) + (Core.isBlue() ? 0 : 180));
+        return (Math.toDegrees(getGyroAngle()) + (Core.isBlue() ? 0 : 180));
     }
     /** 
      * @return Returns alliance relative CCW Rotation2d gyro angle for use with always alliance relative pose
      */
     public Rotation2d odoAngle(){
-        return Rotation2d.fromDegrees(gyroReading);
+        return Rotation2d.fromDegrees(getGyroAngle());
     }
     public double speedMagnitude(){
         return Math.sqrt(Math.pow(speeds().vxMetersPerSecond, 2) + Math.pow(speeds().vyMetersPerSecond, 2));
@@ -425,11 +431,11 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
 
     @Override
     public void toLog(LogTable table) {
-        table.put("gyroReading", gyroReading);
+        table.put("gyroReading", getGyroAngle());
     }
 
     @Override
     public void fromLog(LogTable table) {
-        gyroReading = table.get("gyroReading", gyroReading);
+        //gyroReading = table.get("gyroReading", gyroReading);
     }
 }
