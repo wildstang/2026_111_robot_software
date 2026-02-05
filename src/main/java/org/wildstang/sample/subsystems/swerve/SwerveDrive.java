@@ -113,6 +113,9 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         if (source == select && select.getValue()) {
             gyroReading = 0;
             swerve.getPigeon2().setYaw(0);
+            // while (swerve.getState().Pose.getRotation().getDegrees() > 0.1 || swerve.getState().Pose.getRotation().getDegrees() < -0.1){
+            //     swerve.resetRotation(new Rotation2d(0));
+            // }
             swerveSignal.setRotLocked(0);
         }
 
@@ -230,7 +233,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
             this.swerveSignal.setTranslation(horizontalPower, verticalPower);
 
         } else if (driveState == DriveType.SNAKE){
-            this.swerveSignal.setSnake(horizontalPower, verticalPower);
+            this.swerveSignal.setSnake(verticalPower, horizontalPower);
         // If we want to use object detection pipeline to align to coral
         // Aligns heading to face coral and then p-loop to intake it
         // Keeps driving to last seen point but doesn't turn if it can't see a coral
@@ -273,8 +276,8 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         SmartDashboard.putNumber("Y Power", verticalPower);
         SmartDashboard.putNumber("# Robot X", pose.estimatedPose.getX());
         SmartDashboard.putNumber("# Robot Y", pose.estimatedPose.getY());
-        SmartDashboard.putNumber("Gyro Reading", getGyroAngle());
         SmartDashboard.putNumber("rotSpeed", swerveSignal.getRotation());
+                SmartDashboard.putNumber("Gyro Reading", swerve.getState().Pose.getRotation().getDegrees());//getGyroAngle());
         SmartDashboard.putString("Drive mode", driveState.toString());
         SmartDashboard.putString("Drive Control", swerveSignal.currentState().toString());
         SmartDashboard.putNumber("Rotation target", swerveSignal.getRotTarget());
@@ -359,6 +362,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         // Make degrees clockwise
         gyroReading = degrees;
         swerve.getPigeon2().setYaw(degrees);
+        //swerve.resetRotation(new Rotation2d(Math.toRadians(degrees)));
     }
 
     public double getGyroAngle() {
@@ -370,7 +374,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
      * @return Returns the field relative CCW gyro angle for use with Limelight MegaTag2
      */
     public double getMegaTag2Yaw(){
-        return (Math.toDegrees(swerve.getRotation3d().getAngle()) + (Core.isBlue() ? 0 : 180));
+        return (Math.toDegrees(swerve.getPigeon2().getYaw().getValueAsDouble()) + (Core.isBlue() ? 0 : 180));
     }
     /** 
      * @return Returns alliance relative CCW Rotation2d gyro angle for use with always alliance relative pose

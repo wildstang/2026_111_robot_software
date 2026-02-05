@@ -45,7 +45,7 @@ public class SwerveSignal {
         } else if (state == controlState.SNAKE){
             return driveLockedCommand.withVelocityX(getVertical() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
-                .withTargetDirection(new Rotation2d(Math.atan2(-getHorizontal(), getVertical())));
+                .withTargetDirection(new Rotation2d(Math.atan2(getHorizontal(), getVertical())));
         } else if (state == controlState.DRIVETOPOINT){
             translationRequest.setTarget(getDriveToPoint(), autoMaxSpeed);
             return translationRequest;
@@ -58,7 +58,7 @@ public class SwerveSignal {
         } else {//} else if (state == controlState.MANUAL){
             return driveCommand.withVelocityX(getVertical() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
-                .withRotationalRate(getRotation() * RotationsPerSecond.of(0.75).in(RadiansPerSecond));
+                .withRotationalRate(getRotation() * RotationsPerSecond.of(0.35).in(RadiansPerSecond));
         }
     }
     public SwerveSignal(double hori, double vert, double rot){
