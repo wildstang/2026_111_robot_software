@@ -117,21 +117,24 @@ public class WsPose implements Subsystem {
         //shoot on da move
         double dix = VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX();
         double diy = VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getY();
-        double dih = Math.sqrt(dix*dix + diy*diy);
+        double dih = Math.hypot(dix, diy);
         double robotVelx = swerve.getSpeeds().vxMetersPerSecond;
         double robotVely = swerve.getSpeeds().vyMetersPerSecond;
         
         double dnewx = dix + robotVelx * getTof(dih);
         double dnewy = diy + robotVely * getTof(dih);
-        double dnew = Math.sqrt(dnewx*dnewx + dnewy*dnewy);
+        double dnew = Math.hypot(dnewx, dnewy);
         double percentdiff = (dnew - dih)/dih;
+        dih = dnew;
         double count = 0;
         double dnewTof = getTof(dnew);
         while((percentdiff >= 0.02) || (count <= 6  )){
             count++;
             dnewx = dix + robotVelx * dnewTof;
             dnewy = diy + robotVely * dnewTof;
-            dnew = Math.sqrt(dnewx*dnewx + dnewy * dnewy);
+            dnew = Math.hypot(dnewx, dnewy);
+            percentdiff = (dnew - dih)/dih;
+            dih = dnew;
             dnewTof = getTof(dnew);
         }
         angleToHub = Math.atan(dnewy/dnewx);

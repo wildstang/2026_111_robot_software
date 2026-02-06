@@ -32,8 +32,8 @@ public class Turret implements Subsystem{
     @Override
     public void init() {
         turretMotor = (WsTalon) WsOutputs.TURRET.get();
-        pose = (WsPose) Core.getSubsystemManager().getSubsystem(WsSubsystems.WS_POSE);
-        swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
+        turretMotor.initClosedLoop(1.0, 0, 0);
+        turretMotor.setCurrentLimit(40,40);
     }
 
     @Override
@@ -100,10 +100,7 @@ public class Turret implements Subsystem{
     public boolean goodToFire(){
         //good
         double wiggle = Math.abs(desiredTurretAngle - turretMotor.getPosition());
-        if(wiggle > 1){
-            return false;
-        }
-        return true;
+        return wiggle < 1.0;
     }
 
     @Override
@@ -113,6 +110,7 @@ public class Turret implements Subsystem{
     @Override
     public void initSubsystems() {
         pose = (WsPose) Core.getSubsystemManager().getSubsystem(WsSubsystems.WS_POSE);
+        swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
     }
 
     @Override
