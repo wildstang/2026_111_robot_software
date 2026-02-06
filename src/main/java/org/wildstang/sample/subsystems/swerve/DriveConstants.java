@@ -49,8 +49,6 @@ public final class DriveConstants {
     private static final Slot0Configs steerGains = new Slot0Configs()
         .withKP(20).withKI(0).withKD(0.5)
         .withKS(0.1).withKV(0.0).withKA(0)
-        // .withKP(0.0).withKI(0.0).withKD(0.0)
-        // .withKS(0.0).withKV(0.0).withKA(0.0)
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     //drive PID values
     private static final Slot0Configs driveGains = new Slot0Configs()
@@ -63,11 +61,11 @@ public final class DriveConstants {
 
     //todo measure? from 2910
     private static final double slipCurrent = 120;
-    //drive with 100A stator and 50A supply limits
+    //drive with 70A stator and 50A supply limits
     private static final TalonFXConfiguration driveInitialConfig = new TalonFXConfiguration()
         .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(70).withStatorCurrentLimitEnable(true)
-        .withSupplyCurrentLimit(70).withSupplyCurrentLimitEnable(true));
-    //steer with 90A stator and 30A supply limits
+        .withSupplyCurrentLimit(50).withSupplyCurrentLimitEnable(true));
+    //steer with 60A stator and 30A supply limits
     private static final TalonFXConfiguration steerInitialConfig = new TalonFXConfiguration()
         .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(60).withStatorCurrentLimitEnable(true)
         .withSupplyCurrentLimit(30).withSupplyCurrentLimitEnable(true));
@@ -78,7 +76,7 @@ public final class DriveConstants {
     
     //find this from swerve website
     public static final LinearVelocity maxSpeed = MetersPerSecond.of(5.72);
-    //this is equal to module teeth divided by drive motor pinion teeth, we are 88/12
+    //this is causing jitter, leave at 0
     private static final double coupleRatio = 0;//4.5;
     //drive gear ratio
     private static final double driveRatio = 5.4;
