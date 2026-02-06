@@ -121,13 +121,13 @@ public class WsPose implements Subsystem {
         double robotVelx = swerve.getSpeeds().vxMetersPerSecond;
         double robotVely = swerve.getSpeeds().vyMetersPerSecond;
         
-        double dnewx = dix + robotVelx * getTof(dih);
-        double dnewy = diy + robotVely * getTof(dih);
+        double dnewx = dix + robotVelx * ShotData.getTOF(dih);
+        double dnewy = diy + robotVely * ShotData.getTOF(dih);
         double dnew = Math.hypot(dnewx, dnewy);
         double percentdiff = (dnew - dih)/dih;
         dih = dnew;
         double count = 0;
-        double dnewTof = getTof(dnew);
+        double dnewTof = ShotData.getTOF(dnew);
         while((percentdiff >= 0.02) || (count <= 6  )){
             count++;
             dnewx = dix + robotVelx * dnewTof;
@@ -135,7 +135,7 @@ public class WsPose implements Subsystem {
             dnew = Math.hypot(dnewx, dnewy);
             percentdiff = (dnew - dih)/dih;
             dih = dnew;
-            dnewTof = getTof(dnew);
+            dnewTof = ShotData.getTOF(dnew);
         }
         angleToHub = Math.atan(dnewy/dnewx);
         
@@ -345,19 +345,5 @@ public class WsPose implements Subsystem {
                 
         }
         return true;
-        }
-
-     
-
-    private double getTof(double distance){
-        int last = VisionConsts.distance.length - 1;
-        if (distance < VisionConsts.distance[0]) return VisionConsts.tof[0];
-        for (int i = 1; i < VisionConsts.distance.length; i++){
-            if (distance < VisionConsts.distance[i]){
-                return VisionConsts.tof[i-1] + (VisionConsts.tof[i]-VisionConsts.tof[i-1])*(distance-VisionConsts.distance[i-1])/(VisionConsts.distance[i]-VisionConsts.distance[i-1]);
-            }
-        }
-        return VisionConsts.tof[last] + (distance-VisionConsts.distance[last])*(VisionConsts.tof[last]-VisionConsts.tof[last-1])/(VisionConsts.distance[last]-VisionConsts.distance[last-1]);
-    
     }
 }
