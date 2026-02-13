@@ -41,17 +41,18 @@ public final class DriveConstants {
     public static final double DRIVE_F_I = 0.000;//
 
     //heading PID value
-    public static final double heading_P = 0.1;
+    public static final double heading_P = 0.2;
     //heading PID value
     public static final double heading_D = 0.0;
 
     //steer PID values
     private static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(100).withKI(0).withKD(0.5).withKS(0.1).withKV(1.91).withKA(0)
+        .withKP(20).withKI(0).withKD(0.5)
+        .withKS(0.1).withKV(0.0).withKA(0)
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     //drive PID values
     private static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(0.1).withKI(0).withKD(0).withKS(0).withKV(0.124);
+        .withKP(0.0).withKI(0).withKD(0).withKS(0).withKV(0.0);
     private static final ClosedLoopOutputType steerClosedLoopOutput = ClosedLoopOutputType.Voltage;
     private static final ClosedLoopOutputType driveClosedLoopOutput = ClosedLoopOutputType.Voltage;
     private static final DriveMotorArrangement driveType = DriveMotorArrangement.TalonFX_Integrated;
@@ -60,11 +61,11 @@ public final class DriveConstants {
 
     //todo measure? from 2910
     private static final double slipCurrent = 120;
-    //drive with 100A stator and 50A supply limits
+    //drive with 70A stator and 50A supply limits
     private static final TalonFXConfiguration driveInitialConfig = new TalonFXConfiguration()
-        .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(120).withStatorCurrentLimitEnable(true)
-        .withSupplyCurrentLimit(70).withSupplyCurrentLimitEnable(true));
-    //steer with 90A stator and 30A supply limits
+        .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(70).withStatorCurrentLimitEnable(true)
+        .withSupplyCurrentLimit(50).withSupplyCurrentLimitEnable(true));
+    //steer with 60A stator and 30A supply limits
     private static final TalonFXConfiguration steerInitialConfig = new TalonFXConfiguration()
         .withCurrentLimits(new CurrentLimitsConfigs().withStatorCurrentLimit(60).withStatorCurrentLimitEnable(true)
         .withSupplyCurrentLimit(30).withSupplyCurrentLimitEnable(true));
@@ -74,31 +75,31 @@ public final class DriveConstants {
     public static final CANBus canBus = new CANBus("drive_canivore", "./logs/example.hoot");
     
     //find this from swerve website
-    public static final LinearVelocity maxSpeed = MetersPerSecond.of(4.54);
-    //this is equal to module teeth divided by drive motor pinion teeth, 2910 had 54/12
-    private static final double coupleRatio = 3.81818181818181813;
+    public static final LinearVelocity maxSpeed = MetersPerSecond.of(5.72);
+    //this is causing jitter, leave at 0
+    private static final double coupleRatio = 0;//4.5;
     //drive gear ratio
-    private static final double driveRatio = 7.3636363636;
+    private static final double driveRatio = 5.4;
     //steer gear ratio
-    private static final double steerRatio = 15.42857142857143;
+    private static final double steerRatio = 12.1;
     //empirically find this, 2910 had 1.95
-    private static final double wheelRadius = 2.167;
+    private static final double wheelRadius = 1.95;
     private static final boolean invertLeft = false;
     private static final boolean invertRight = true;
     //width to center of wheel
-    private static final double halfWidth = 13;
+    private static final double halfWidth = 12.25;
     //length to center of wheel
-    private static final double halfLength = 13;
+    private static final double halfLength = 9.75;
 
     //bevel gear points to the left
     //find magnet offset
-    private static final double FL_encoderOffset = 0.0;
+    private static final double FL_encoderOffset = 0.2648;
     //find magnet offset
-    private static final double FR_encoderOffset = 0.0;
+    private static final double FR_encoderOffset = -0.2236;
     //find magnet offset
-    private static final double BL_encoderOffset = 0.0;
+    private static final double BL_encoderOffset = -0.4353;
     //find magnet offset
-    private static final double BR_encoderOffset = 0.0;
+    private static final double BR_encoderOffset = -0.0054;
 
     public static final SwerveDrivetrainConstants swerveCTREconsts = new SwerveDrivetrainConstants()
         .withCANBusName(canBus.getName()).
@@ -117,9 +118,9 @@ public final class DriveConstants {
             .withSlipCurrent(slipCurrent)
             .withSpeedAt12Volts(maxSpeed)
             .withDriveFrictionVoltage(0.25)
-            .withSteerFrictionVoltage(0.001)
-            .withDriveInertia(0.001)
-            .withSteerInertia(0.00001)
+            .withSteerFrictionVoltage(0.2)
+            .withDriveInertia(0.01)
+            .withSteerInertia(0.01)
             .withDriveMotorType(driveType)
             .withSteerMotorType(steertype)
             .withFeedbackSource(steerEncoder)

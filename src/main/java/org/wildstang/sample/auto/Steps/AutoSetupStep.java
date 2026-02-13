@@ -18,6 +18,7 @@ public class AutoSetupStep extends AutoStep{
     private SwerveDrive swerve;
     private Pose2d odoPose;
     private WsPose pose;
+    private LedController led;
 
     /**
      * Setup the robot at start of autonomous
@@ -38,12 +39,14 @@ public class AutoSetupStep extends AutoStep{
         if (WsSwerveHelper.angleDist(swerve.getGyroAngle(), heading) < 1) {
             // Sets odometry alliance relative
             pose.resetPose(odoPose);
+            led.startAuto();
             this.setFinished();
         }
     }
     public void initialize(){
         swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
         pose = (WsPose) Core.getSubsystemManager().getSubsystem(WsSubsystems.WS_POSE);
+        led = (LedController) Core.getSubsystemManager().getSubsystem(WsSubsystems.LED);
         swerve.setAutoValues(0,0,0, 0, odoPose);
         swerve.setAutoHeading(heading);
         swerve.setGyro(heading);

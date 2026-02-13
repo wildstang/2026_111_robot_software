@@ -26,8 +26,8 @@ public class YTranslationRequest implements SwerveRequest{
 
         return request
             .withVelocityX(DriveConstants.maxSpeed.in(MetersPerSecond) * xPower)
-            .withVelocityY(DriveConstants.ALIGN_P * (targetPose.getY() - arg0.currentPose.getY()))
-            .withTargetDirection(new Rotation2d(0))
+            .withVelocityY(DriveConstants.ALIGN_P * DriveConstants.maxSpeed.in(MetersPerSecond) * (targetPose.getY() - arg0.currentPose.getY()))
+            .withTargetDirection(targetPose.getRotation())
             .apply(arg0, arg1);
     }
     public void setTarget(Pose2d target, double newX){

@@ -18,6 +18,7 @@ public final class CANConstants {
 
     //Gyro and CAN sensor values
     public static final int GYRO = 31;
+    public static final int CANDLE = 32;
 
     //swerve constants
     public static final int DRIVE1 = 11; // FL

@@ -1,8 +1,11 @@
 package org.wildstang.hardware.roborio.outputs;
 
+import static edu.wpi.first.units.Units.Rotations;
+
 import org.wildstang.framework.logger.Log;
 import org.wildstang.hardware.roborio.outputs.config.WsMotorControllers;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -14,8 +17,11 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 
@@ -33,12 +39,13 @@ public class WsTalon extends WsMotorController {
     private Follower follow;
     private TalonFX follower;
     private TalonFXConfigurator followerApply;
+    private CANcoder externalEncoder;
 
     private enum RequestType {PERCENT_OUTPUT, POSITION, VELOCITY}
     private RequestType currentRequest = RequestType.PERCENT_OUTPUT;
     private DutyCycleOut percentRequest = new DutyCycleOut(0.0);
     private PositionDutyCycle positionRequest = new PositionDutyCycle(0.0);
-    private VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0);
+    private VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0.0);
     
     private WsMotorControllers motorControllerType;
     private boolean followerExists = false;
@@ -147,6 +154,15 @@ public class WsTalon extends WsMotorController {
     public double getTemperature(){
         return motor.getDeviceTemp().getValueAsDouble();
     }
+    public double getCurret(){
+        return motor.getStatorCurrent().getValueAsDouble();
+    }
+    public double getClosedLoopOutput(){
+        return motor.getClosedLoopOutput().getValueAsDouble();
+    }
+    public double getTorqueCurrent(){
+        return motor.getTorqueCurrent().getValueAsDouble();
+    }
 
     /**
      * Sets motor speed to current value, from -1.0 to 1.0.
@@ -157,6 +173,8 @@ public class WsTalon extends WsMotorController {
             motor.setControl(percentRequest);
         } else if (currentRequest == RequestType.POSITION){
             motor.setControl(positionRequest);
+        } else if (currentRequest == RequestType.VELOCITY){
+            motor.setControl(velocityRequest);
         }
         if (followerExists) follower.setControl(follow);
     }
@@ -179,6 +197,15 @@ public class WsTalon extends WsMotorController {
         slot0.kD = D;
         motorApply.apply(slot0);
     }
+    public void initClosedLoop(double P, double I, double D, double S, double V){
+        Slot0Configs slot0 = new Slot0Configs();
+        slot0.kP = P;
+        slot0.kI = I;
+        slot0.kD = D;
+        slot0.kS = S;
+        slot0.kV = V;
+        motorApply.apply(slot0);
+    }
 
     /*
      * Adds a closed loop control slot for the sparkmax
@@ -192,6 +219,15 @@ public class WsTalon extends WsMotorController {
         slotNew.kD = D;
         motorApply.apply(slotNew);
     }
+    public void addClosedLoop(double P, double I, double D, double S, double V){
+        Slot1Configs slotNew = new Slot1Configs();
+        slotNew.kP = P;
+        slotNew.kI = I;
+        slotNew.kD = D;
+        slotNew.kS = S;
+        slotNew.kV = V;
+        motorApply.apply(slotNew);
+    }
 
     /**
      * Sets the motor to track the given position
@@ -200,11 +236,6 @@ public class WsTalon extends WsMotorController {
     public void setPosition(double target){
         positionRequest.withPosition(target);
         currentRequest = RequestType.POSITION;
-    }
-
-    public void setVelocity(double target){
-        velocityRequest.withVelocity(target);
-        currentRequest = RequestType.VELOCITY;
     }
 
     /**
@@ -218,6 +249,16 @@ public class WsTalon extends WsMotorController {
         currentRequest = RequestType.POSITION;
     }
 
+    public void setVelocity(double target){
+        velocityRequest.withVelocity(target);
+        currentRequest = RequestType.VELOCITY;
+    }
+    public void setVelocity(double target, int slotID){
+        velocityRequest.withSlot(slotID);
+        velocityRequest.withVelocity(target);
+        currentRequest = RequestType.VELOCITY;
+    }
+
 
     /**
      * Does nothing, config values only affects start state.
@@ -229,5 +270,22 @@ public class WsTalon extends WsMotorController {
         if (followerExists){
             followerApply.apply(config);
         }
+    }
+    public void addExternalEncoder(boolean oppose, double zeroValue, double discontinuityValue, int encoderID, 
+            double sensorToMechRatio, double motorToSensorRatio){
+
+        externalEncoder = new CANcoder(encoderID, "mechanism_canivore");
+        CANcoderConfiguration canConfig = new CANcoderConfiguration();
+        canConfig.MagnetSensor.SensorDirection = oppose ? 
+            SensorDirectionValue.Clockwise_Positive : SensorDirectionValue.CounterClockwise_Positive;
+        canConfig.MagnetSensor.withMagnetOffset(Rotations.of(zeroValue));
+        canConfig.MagnetSensor.withAbsoluteSensorDiscontinuityPoint(Rotations.of(discontinuityValue));
+        externalEncoder.getConfigurator().apply(canConfig);
+
+        config.Feedback.FeedbackRemoteSensorID = encoderID;
+        config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        config.Feedback.SensorToMechanismRatio = sensorToMechRatio;
+        config.Feedback.RotorToSensorRatio = motorToSensorRatio;
+        motorApply.apply(config);
     }
 }

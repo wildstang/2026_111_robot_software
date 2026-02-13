@@ -1,14 +1,5 @@
 package org.wildstang.sample.subsystems.swerve;
 
-import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
-import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
-
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -21,6 +12,7 @@ import org.wildstang.hardware.roborio.inputs.WsJoystickAxis;
 import org.wildstang.hardware.roborio.inputs.WsJoystickButton;
 import org.wildstang.sample.robot.WsInputs;
 import org.wildstang.sample.robot.WsSubsystems;
+import org.wildstang.sample.subsystems.swerve.SwerveSignal.controlState;
 import org.wildstang.sample.subsystems.targeting.VisionConsts;
 import org.wildstang.sample.subsystems.targeting.WsPose;
 
@@ -43,18 +35,18 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     private AnalogInput leftStickHorizontal;//translation joystick x
     private AnalogInput leftStickVertical;//translation joystick y
     private AnalogInput rightStickHorizontal;//rot joystick
-    private AnalogInput rightTrigger;//intake, score when scoring sequence
-    private AnalogInput leftTrigger;//scoring sequence
-    private DigitalInput rightBumper;//prestaged algae intake
-    private DigitalInput leftBumper;//hp station pickup
+    private AnalogInput rightTrigger;//intake
+    private AnalogInput leftTrigger;//score
+    private DigitalInput rightBumper;//intake with snake mode
+    private DigitalInput leftBumper;//drive over bump
     private DigitalInput select;//gyro reset
     private DigitalInput faceUp;//rotation lock 0 degrees
     private DigitalInput faceRight;//rotation lock 90 degrees
     private DigitalInput faceLeft;//rotation lock 270 degrees
     private DigitalInput faceDown;//rotation lock 180 degrees
-    private DigitalInput driverStart; // Auto rotate to reef
-    private DigitalInput operatorLeftBumper; // Select left branch auto align
-    private DigitalInput operatorRightBumper; // Select right branch auto align
+    private DigitalInput driverStart; // Auto drive to endgame
+    private DigitalInput operatorLeftBumper; 
+    private DigitalInput operatorRightBumper;
     private DigitalInput operatorFaceLeft;
     private DigitalInput operatorStart;
     private DigitalInput operatorSelect;
@@ -62,12 +54,11 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     private WsJoystickAxis operatorLeftTrigger;
     private WsJoystickButton operatorX;
 
-    private double gyroReading; // Reading from gyro CW degrees
-
     private double horizontalPower;
     private double verticalPower;
 
     public boolean autoUsePID = true;
+    public double autoMaxSpeed = 1.0;
 
     private swerveCTRE swerve = new swerveCTRE(DriveConstants.swerveCTREconsts, 
         DriveConstants.frontLeft, DriveConstants.frontRight, DriveConstants.backLeft, DriveConstants.backRight);
@@ -76,6 +67,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
 
     private WsSwerveHelper swerveHelper = new WsSwerveHelper();
     StructArrayPublisher<SwerveModuleState> moduleStatePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("ModuleStates", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> moduleIdealPublisher = NetworkTableInstance.getDefault().getStructArrayTopic("Module real states", SwerveModuleState.struct).publish();
     public ChassisSpeeds speeds;
 
 
@@ -86,7 +78,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     StructPublisher<Pose2d> targetPosePublisher = NetworkTableInstance.getDefault().getStructTopic("targetPose", Pose2d.struct).publish();
 
 
-    public enum DriveType {TELEOP, AUTO, CORALINTAKE};
+    public enum DriveType {TELEOP, AUTO, SNAKE, CORALINTAKE};
     private DriveType driveState;
 
     @Override
@@ -94,20 +86,23 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         
         
         // If none of those conditions are met, return to Teleop mode
-        //} else {
+        if (rightBumper.getValue()){
+            driveState = DriveType.SNAKE;
+        } else {
             driveState = DriveType.TELEOP;
-        //}
+        }
 
         if (driveState == DriveType.AUTO) driveState = DriveType.TELEOP;
 
         //get x and y speeds
-        horizontalPower = swerveHelper.scaleDeadband(leftStickHorizontal.getValue(), DriveConstants.DEADBAND);
+        horizontalPower = -swerveHelper.scaleDeadband(leftStickHorizontal.getValue(), DriveConstants.DEADBAND);
         verticalPower = swerveHelper.scaleDeadband(leftStickVertical.getValue(), DriveConstants.DEADBAND);
-        
         
         //reset gyro
         if (source == select && select.getValue()) {
-            swerve.resetRotation(new Rotation2d());
+            while (swerve.getState().Pose.getRotation().getDegrees() > 0.1 || swerve.getState().Pose.getRotation().getDegrees() < -0.1){
+                swerve.resetRotation(new Rotation2d(0));
+            }
             swerveSignal.setRotLocked(0);
         }
 
@@ -132,13 +127,25 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
             else if (faceDown.getValue()) swerveSignal.setRotLocked(240);
             else swerveSignal.setRotLocked(270);
         }
+        if (leftBumper.getValue()){
+            if (getGyroAngle()<90) swerveSignal.setRotLocked(50);
+            else if (getGyroAngle() < 180) swerveSignal.setRotLocked(130);
+            else if (getGyroAngle() < 270) swerveSignal.setRotLocked(230);
+            else swerveSignal.setRotLocked(310);
+        }
 
         //get rotational joystick
         double rotSpeed = rightStickHorizontal.getValue()*Math.abs(rightStickHorizontal.getValue());
         rotSpeed = swerveHelper.scaleDeadband(rotSpeed, DriveConstants.DEADBAND);
         //if the rotational joystick is being used, the robot should not be auto tracking heading
-        if (rotSpeed != 0) {
+        if (rotSpeed != 0 || swerveSignal.currentState() == controlState.MANUAL) {
             swerveSignal.setFreeRotation(rotSpeed);
+        }
+        if (faceLeft.getValue()){
+            swerve.resetTranslation(new Translation2d(5.0, 4.0));
+        }
+        if (faceRight.getValue()){
+            swerve.resetTranslation(new Translation2d(2.0, 5.0));
         }
     }
  
@@ -146,7 +153,6 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     public void init() {
         initInputs();
         resetState();
-        swerve.resetRotation(new Rotation2d());
     }
 
     public void initSubsystems() {
@@ -205,7 +211,6 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
 
     @Override
     public void update() {
-        gyroReading = Math.toDegrees(swerve.getRotation3d().getAngle());
         Logger.processInputs("Swerve", this);
         pose.addOdometryObservation(swerve.getState().Pose);
         // Reset coral point
@@ -219,6 +224,8 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         if (driveState == DriveType.TELEOP) {
             this.swerveSignal.setTranslation(horizontalPower, verticalPower);
 
+        } else if (driveState == DriveType.SNAKE){
+            this.swerveSignal.setSnake(verticalPower, horizontalPower);
         // If we want to use object detection pipeline to align to coral
         // Aligns heading to face coral and then p-loop to intake it
         // Keeps driving to last seen point but doesn't turn if it can't see a coral
@@ -245,7 +252,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
             // }
             
         } else if (driveState == DriveType.AUTO) {
-            swerveSignal.setDriveToPoint(targetPose);
+            swerveSignal.setDriveToPoint(targetPose, autoMaxSpeed);
         }
             
         swerve.setControl(swerveSignal.drive());
@@ -253,25 +260,24 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         SmartDashboard.putNumber("Y Power", verticalPower);
         SmartDashboard.putNumber("# Robot X", pose.estimatedPose.getX());
         SmartDashboard.putNumber("# Robot Y", pose.estimatedPose.getY());
-        SmartDashboard.putNumber("Gyro Reading", getGyroAngle());
+        SmartDashboard.putNumber("* swerve X pos", swerve.getState().Pose.getX());
+        SmartDashboard.putNumber("* swerve Y pos", swerve.getState().Pose.getY());
         SmartDashboard.putNumber("rotSpeed", swerveSignal.getRotation());
+        SmartDashboard.putNumber("Gyro Reading", swerve.getState().Pose.getRotation().getDegrees());//getGyroAngle());
         SmartDashboard.putString("Drive mode", driveState.toString());
-        SmartDashboard.putString("Drive Control", swerveSignal.currentState());
+        SmartDashboard.putString("Drive Request Type", swerveSignal.currentState().toString());
         SmartDashboard.putNumber("Rotation target", swerveSignal.getRotTarget());
-        SmartDashboard.putNumber("Yaw", swerve.getPigeon2().getYaw().getValueAsDouble());
-        SmartDashboard.putNumber("Roll", swerve.getPigeon2().getRoll().getValueAsDouble());
-        SmartDashboard.putNumber("Pitch", swerve.getPigeon2().getPitch().getValueAsDouble());
         SmartDashboard.putNumber("@ mega2 gyro", getMegaTag2Yaw());
         SmartDashboard.putNumber("@ speed", speedMagnitude());
         if (targetPose != null){
             targetPosePublisher.set(targetPose);
         }
         moduleStatePublisher.set(moduleStates());
+        moduleIdealPublisher.set(modulesStatesSim());
     }
     
     @Override
     public void resetState() {
-        gyroReading = 0;
         horizontalPower = 0;
         verticalPower = 0;
         swerveSignal.setFreeRotation(0);
@@ -309,6 +315,10 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     public void setAutoValues(Pose2d target) {
         setAutoValues(0, 0, 0, 0, target);
     }
+    public void setAutoValues(Pose2d target, double maxSpeed){
+        setAutoValues(0,0,0,0,target);
+        this.autoMaxSpeed = maxSpeed;
+    }
 
     public void usePID(boolean use) {
         autoUsePID = use;
@@ -328,13 +338,11 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     public void setGyro(double degrees) {
         resetState();
         setToAuto();
-
-        // Make degrees clockwise
         swerve.resetRotation(new Rotation2d(Math.toRadians(degrees)));
     }
 
     public double getGyroAngle() {
-        return gyroReading;
+        return swerve.getState().Pose.getRotation().getDegrees();
     }  
 
     /**
@@ -342,13 +350,13 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
      * @return Returns the field relative CCW gyro angle for use with Limelight MegaTag2
      */
     public double getMegaTag2Yaw(){
-        return (Math.toDegrees(swerve.getRotation3d().getAngle()) + (Core.isBlue() ? 0 : 180));
+        return (Math.toDegrees(getGyroAngle()) + (Core.isBlue() ? 0 : 180));
     }
     /** 
      * @return Returns alliance relative CCW Rotation2d gyro angle for use with always alliance relative pose
      */
     public Rotation2d odoAngle(){
-        return Rotation2d.fromDegrees(gyroReading);
+        return Rotation2d.fromDegrees(getGyroAngle());
     }
     public double speedMagnitude(){
         return Math.sqrt(Math.pow(speeds().vxMetersPerSecond, 2) + Math.pow(speeds().vyMetersPerSecond, 2));
@@ -362,9 +370,9 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         return new SwerveModuleState[]{swerve.getModule(0).getCurrentState(), swerve.getModule(1).getCurrentState(), 
             swerve.getModule(2).getCurrentState(), swerve.getModule(3).getCurrentState()};
     }
-
-    private boolean frontCloser(double targetAngle) {
-        return (WsSwerveHelper.angleDist(targetAngle, getGyroAngle()) < 90);
+    public SwerveModuleState[] modulesStatesSim(){
+        return new SwerveModuleState[]{swerve.getModule(0).getTargetState(), swerve.getModule(1).getTargetState(),
+            swerve.getModule(2).getTargetState(), swerve.getModule(3).getTargetState()};
     }
 
     // SUBSYSTEM ACCESS METHODS
@@ -393,11 +401,11 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
 
     @Override
     public void toLog(LogTable table) {
-        table.put("gyroReading", gyroReading);
+        table.put("gyroReading", getGyroAngle());
     }
 
     @Override
     public void fromLog(LogTable table) {
-        gyroReading = table.get("gyroReading", gyroReading);
+        //gyroReading = table.get("gyroReading", gyroReading);
     }
 }
