@@ -7,6 +7,7 @@ import org.wildstang.hardware.roborio.outputs.WsTalon;
 import org.wildstang.sample.robot.WsOutputs;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
+import org.wildstang.sample.subsystems.targeting.VisionConsts;
 import org.wildstang.sample.subsystems.targeting.WsPose;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -43,14 +44,20 @@ public class Turret implements Subsystem{
     @Override
     public void update() {
         if(swerve.speedMagnitude() < 0.05){
-            desiredTurretAngle = pose.fromFieldToRobotAngle();
+            //returns staic angle of turret, robot centric, wrapped [0,360)
+            desiredTurretAngle = pose.fromFieldToRobotAngle(pose.angleOfTurret());
         }
         else{
-            desiredTurretAngle = pose.angleToHub;
+            //returns sotm angle of turret, robot centric, wrapped [0, 360)
+            desiredTurretAngle = pose.fromFieldToRobotAngle(pose.shootOnTheMove());
         }
         
         turretMotor.setPosition(rotateTurret());
         SmartDashboard.putString("Turrent State", turretState.name());
+        SmartDashboard.putNumber("Turret position", turretMotor.getPosition());
+        SmartDashboard.putNumber("Turret target", rotateTurret());
+        SmartDashboard.putNumber("Turret unwrapped target", desiredTurretAngle);
+        SmartDashboard.putBoolean("Turret good to fire", goodToFire());
     }
 
     public double rotateTurret(){
@@ -63,7 +70,7 @@ public class Turret implements Subsystem{
             // if there is a coterminal angle, you decide whether to rotate ccw or cw
             //this will apply to both cases - see if actual angle being in the 360-420
             //range is better, and then do the +360
-            if(desiredTurretAngle <= 60){
+            if(desiredTurretAngle <= 90){
                 if((Math.abs(turretMotor.getPosition() - desiredTurretAngle)) 
                     > (Math.abs(turretMotor.getPosition() - (desiredTurretAngle+360)))){
                         actualAngle = desiredTurretAngle + 360;
@@ -80,11 +87,12 @@ public class Turret implements Subsystem{
                 //always rotate to higher coterminal
                 actualAngle = desiredTurretAngle + 360;
              }else if(desiredTurretAngle < 60){
-                if(turretMotor.getPosition() > 360){
-                    actualAngle = desiredTurretAngle + 360;
-                }else if(turretMotor.getPosition() < 60){
-                    actualAngle = desiredTurretAngle;
-                }
+                if((Math.abs(turretMotor.getPosition() - desiredTurretAngle)) 
+                    > (Math.abs(turretMotor.getPosition() - (desiredTurretAngle+360)))){
+                        actualAngle = desiredTurretAngle + 360;
+                }else{
+                        actualAngle = desiredTurretAngle;
+                } 
              }else{
                 actualAngle = desiredTurretAngle;
              }

@@ -62,8 +62,6 @@ public class WsPose implements Subsystem {
     private SwerveModulePosition[] lastWheelPositions = {};
     private Rotation2d lastGyroAngle = new Rotation2d();
 
-    public double angleToHub;
-
     @Override
     public void inputUpdate(Input source) {
     }
@@ -71,6 +69,7 @@ public class WsPose implements Subsystem {
     @Override
     public void initSubsystems() {
         swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
+        turret = (Turret) Core.getSubsystemManager().getSubsystem(WsSubsystems.TURRET);
         left = new WsAprilTagLL("limelight-left", swerve::getMegaTag2Yaw);
         right = new WsAprilTagLL("limelight-right", swerve::getMegaTag2Yaw);
         front = new WsAprilTagLL("limelight-object", swerve::getMegaTag2Yaw);
@@ -111,34 +110,7 @@ public class WsPose implements Subsystem {
         }
 
         odometryPosePublisher.set(odometryPose);
-        estimatedPosePublisher.set(estimatedPose);
-
-
-        //shoot on da move
-        double dix = VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX();
-        double diy = VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getY();
-        double dih = Math.hypot(dix, diy);
-        double robotVelx = swerve.getSpeeds().vxMetersPerSecond;
-        double robotVely = swerve.getSpeeds().vyMetersPerSecond;
-        
-        double dnewx = dix + robotVelx * ShotData.getTOF(dih);
-        double dnewy = diy + robotVely * ShotData.getTOF(dih);
-        double dnew = Math.hypot(dnewx, dnewy);
-        double percentdiff = (dnew - dih)/dih;
-        dih = dnew;
-        double count = 0;
-        double dnewTof = ShotData.getTOF(dnew);
-        while((percentdiff >= 0.02) || (count <= 6  )){
-            count++;
-            dnewx = dix + robotVelx * dnewTof;
-            dnewy = diy + robotVely * dnewTof;
-            dnew = Math.hypot(dnewx, dnewy);
-            percentdiff = (dnew - dih)/dih;
-            dih = dnew;
-            dnewTof = ShotData.getTOF(dnew);
-        }
-        angleToHub = Math.atan(dnewy/dnewx);
-        
+        estimatedPosePublisher.set(estimatedPose);        
     }
 
     public double getStdDev(Optional<PoseEstimate> estimate) {
@@ -276,27 +248,27 @@ public class WsPose implements Subsystem {
        
         double desiredTurretAngle = 0;
         Pose2d robotPose = estimatedPose;
-        double hubXDistance = Math.abs(VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX());
-        double hubYDistance = Math.abs(VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getX());
+        double hubXDistance = VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX();
+        double hubYDistance = VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getY();
 
         if(robotPose.getX() < VisionConsts.ALLIANCE_ZONE){
             // in our alliance zone
-            desiredTurretAngle = Math.tanh((hubYDistance)/hubXDistance);
+            desiredTurretAngle = Math.atan2((hubYDistance),hubXDistance);
             turret.turretState = Turret.GameStates.FIRING;
             
         }else if(robotPose.getX() > VisionConsts.ALLIANCE_ZONE){
             // in the neutral zone
             if(robotPose.getY() > VisionConsts.halfFieldY){
-                double feedZoneXDistance = Math.abs(VisionConsts.highFeedPos[0] - estimatedPose.getX());
-                double feedZoneYDistance = Math.abs(VisionConsts.highFeedPos[1] - estimatedPose.getY());
+                double feedZoneXDistance = VisionConsts.highFeedPos[0] - estimatedPose.getX();
+                double feedZoneYDistance = VisionConsts.highFeedPos[1] - estimatedPose.getY();
 
-                desiredTurretAngle = Math.tanh(feedZoneYDistance/feedZoneXDistance);
+                desiredTurretAngle = Math.atan2(feedZoneYDistance,feedZoneXDistance);
                 turret.turretState = Turret.GameStates.HOMING; 
             }else if(robotPose.getY() < VisionConsts.halfFieldY){
-                double feedZoneXDistance = Math.abs(VisionConsts.lowFeedPos[0] - estimatedPose.getX());
-                double feedZoneYDistance = Math.abs(VisionConsts.lowFeedPos[1] - estimatedPose.getY());
+                double feedZoneXDistance = VisionConsts.lowFeedPos[0] - estimatedPose.getX();
+                double feedZoneYDistance = VisionConsts.lowFeedPos[1] - estimatedPose.getY();
 
-                desiredTurretAngle = Math.tanh(feedZoneYDistance/feedZoneXDistance);
+                desiredTurretAngle = Math.atan2(feedZoneYDistance,feedZoneXDistance);
                 turret.turretState = Turret.GameStates.HOMING; 
 
             }
@@ -307,14 +279,51 @@ public class WsPose implements Subsystem {
                 
             
         }
-        desiredTurretAngle = (desiredTurretAngle + 360) % 360;
-        return desiredTurretAngle;
+        return Math.toDegrees(desiredTurretAngle);
         
             
     }
 
-    public double fromFieldToRobotAngle(){
-        return angleOfTurret() - swerve.getGyroAngle() - VisionConsts.turretOffset;
+    public double fromFieldToRobotAngle(double fieldAngle){
+        return (fieldAngle - swerve.getGyroAngle() - VisionConsts.turretOffset+1080)%360;
+    }
+
+    public double shootOnTheMove(){
+        //shoot on da move
+        double dix = VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX();
+        double diy = VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getY();
+        //use feed positions instead of the hub if we are feeding
+        if (estimatedPose.getX() > VisionConsts.ALLIANCE_ZONE){
+            turret.turretState = Turret.GameStates.HOMING;
+            if (estimatedPose.getY() < VisionConsts.halfFieldY){
+                dix = VisionConsts.lowFeedPos[0] - estimatedPose.getX();
+                diy = VisionConsts.lowFeedPos[1] - estimatedPose.getY();
+            } else {
+                dix = VisionConsts.highFeedPos[0] - estimatedPose.getX();
+                diy = VisionConsts.highFeedPos[1] - estimatedPose.getY();
+            }
+        } else turret.turretState = Turret.GameStates.FIRING;
+        double dih = Math.hypot(dix, diy);
+        double robotVelx = swerve.getSpeeds().vxMetersPerSecond;
+        double robotVely = swerve.getSpeeds().vyMetersPerSecond;
+        
+        double dnewx = dix - robotVelx * ShotData.getTOF(dih);
+        double dnewy = diy - robotVely * ShotData.getTOF(dih);
+        double dnew = Math.hypot(dnewx, dnewy);
+        double percentdiff = (dnew - dih)/dih;
+        dih = dnew;
+        double count = 0;
+        double dnewTof = ShotData.getTOF(dnew);
+        while((percentdiff >= 0.02) || (count <= 6  )){
+            count++;
+            dnewx = dix - robotVelx * dnewTof;
+            dnewy = diy - robotVely * dnewTof;
+            dnew = Math.hypot(dnewx, dnewy);
+            percentdiff = (dnew - dih)/dih;
+            dih = dnew;
+            dnewTof = ShotData.getTOF(dnew);
+        }
+        return Math.toDegrees(Math.atan2(dnewy,dnewx));
     }
 
       public double distanceToTarget(Translation2d target) {
