@@ -11,7 +11,7 @@ import org.wildstang.sample.robot.WsOutputs;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.targeting.WsPose;
 
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Launcher implements Subsystem{
     
@@ -20,11 +20,11 @@ public class Launcher implements Subsystem{
     private WsTalon flywheelMotor, hoodMotor;
 
     private WsJoystickAxis driverLeftTrigger, operatorRightTrigger, operatorLeftTrigger;
-    private WsJoystickButton driverLeftStickButton, operatorLeftBumper, operatorRightBumper;
+    private WsJoystickButton operatorLeftBumper, operatorRightBumper;
 
 
     private enum GameStates {SHOOT, FEED, STOW};
-    private GameStates currentState;
+    private GameStates currentState = GameStates.STOW;
 
     public boolean inFeedingZone;
 
@@ -34,7 +34,6 @@ public class Launcher implements Subsystem{
     private double desiredFlywheelShootVel;
     private double desiredFlywheelFeedVel;
    
-    PIDController flywheelPID;
     private double flywheelPGain, flywheelIGain, flywheelDGain;
 
     private double flywheelShootVelTolerance;
@@ -46,7 +45,6 @@ public class Launcher implements Subsystem{
     private double desiredHoodShootPos;
     private double desiredHoodFeedPos;
 
-    PIDController hoodPID;
     private double hoodPGain, hoodIGain, hoodDGain;
 
     private double hoodShootPositionTolerance;
@@ -57,18 +55,13 @@ public class Launcher implements Subsystem{
 
     @Override
     public void init() {
-        flywheelPID = new PIDController(flywheelPGain, flywheelIGain, flywheelDGain);
         flywheelMotor = (WsTalon) WsOutputs.FLYWHEEL.get();
-        flywheelMotor.setCurrentLimit(120, 70);
-        flywheelMotor.initClosedLoop(flywheelPID.getP(), flywheelPID.getI(), flywheelPID.getD());
+        flywheelMotor.initClosedLoop(flywheelPGain, flywheelIGain, flywheelDGain);
+        flywheelMotor.setCurrentLimit(70, 70);
 
-        hoodPID = new PIDController(hoodPGain, hoodIGain, hoodDGain);
         hoodMotor = (WsTalon) WsOutputs.HOOD.get();
+        hoodMotor.initClosedLoop(hoodPGain, hoodIGain, hoodDGain);
         hoodMotor.setCurrentLimit(50,50);
-        hoodMotor.initClosedLoop(hoodPID.getP(), hoodPID.getI(), hoodPID.getD());
-
-        driverLeftStickButton = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.DRIVER_LEFT_JOYSTICK_BUTTON);
-        driverLeftStickButton.addInputListener(this);
 
         driverLeftTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.DRIVER_LEFT_TRIGGER);
         driverLeftTrigger.addInputListener(this);
@@ -95,13 +88,11 @@ public class Launcher implements Subsystem{
     @Override
     public void inputUpdate(Input source) {
        
-        if(((Math.abs(driverLeftTrigger.getValue()) > 0.5)) 
-            || (driverLeftStickButton.getValue() && !inFeedingZone) 
+        if(((Math.abs(driverLeftTrigger.getValue()) > 0.5))  
                 || (Math.abs(operatorRightTrigger.getValue()) > 0.5)){
             currentState = GameStates.SHOOT;
         }
-        else if((driverLeftStickButton.getValue() && inFeedingZone) 
-            || operatorLeftBumper.getValue() 
+        else if(operatorLeftBumper.getValue() 
                 || (Math.abs(operatorLeftTrigger.getValue()) > 0.5) 
                     || operatorRightBumper.getValue()){
             currentState = GameStates.FEED;
@@ -121,8 +112,8 @@ public class Launcher implements Subsystem{
                 desiredFlywheelShootVel = pose.getFlywheelShootVelocity();
                 desiredHoodShootPos = pose.getHoodShootPosition();
 
-                flywheelVelocity = flywheelPID.calculate(flywheelMotor.getVelocity(), desiredFlywheelShootVel);
-                hoodPosition = hoodPID.calculate(hoodMotor.getPosition()*Math.PI*2, desiredHoodShootPos);
+                flywheelMotor.setVelocity(desiredFlywheelShootVel);
+                hoodMotor.setPosition(desiredHoodShootPos);
 
                 goodToFire = isGoodToFire(flywheelVelocity, hoodPosition);
                             
@@ -134,8 +125,8 @@ public class Launcher implements Subsystem{
                 desiredFlywheelFeedVel = pose.getFlywheelFeedVelocity();
                 desiredHoodFeedPos = pose.getHoodFeedPosition();
 
-                flywheelVelocity = flywheelPID.calculate(flywheelMotor.getVelocity(), desiredFlywheelFeedVel);
-                hoodPosition = hoodPID.calculate(hoodMotor.getPosition()*Math.PI*2, desiredHoodFeedPos);
+                flywheelMotor.setVelocity(desiredFlywheelFeedVel);
+                hoodMotor.setPosition(desiredHoodFeedPos);
 
                 goodToFire = isGoodToFire(flywheelVelocity, hoodPosition);
 
@@ -144,11 +135,20 @@ public class Launcher implements Subsystem{
             case STOW:
                 
                 goodToFire = false;
-                flywheelVelocity = 0;
+                flywheelMotor.setSpeed(0.0);
+                hoodMotor.setPosition(0.0);
 
                 break;
 
         }
+        SmartDashboard.putString("Launcher state", currentState.toString());
+        SmartDashboard.putNumber("Launcher velocity", flywheelMotor.getVelocity());
+        SmartDashboard.putNumber("Launcher target velocity", currentState == GameStates.SHOOT ? desiredFlywheelShootVel
+            : currentState == GameStates.FEED ? desiredFlywheelFeedVel : 0.0);
+        SmartDashboard.putNumber("Launcher hood pos", hoodMotor.getPosition());
+        SmartDashboard.putNumber("Launcher hood target", currentState == GameStates.SHOOT ? desiredHoodShootPos
+            : currentState == GameStates.FEED ? desiredHoodFeedPos : 0.0);
+        SmartDashboard.putBoolean("Launcher ready to fire", goodToFire);
     }
 
     private boolean isGoodToFire(double flywheelVel, double hoodPos){
