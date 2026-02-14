@@ -366,6 +366,10 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         return swerve.getState().Speeds;
     }
 
+    public ChassisSpeeds getSpeeds(){
+        return speeds();
+    }
+
     public SwerveModuleState[] moduleStates() {
         return new SwerveModuleState[]{swerve.getModule(0).getCurrentState(), swerve.getModule(1).getCurrentState(), 
             swerve.getModule(2).getCurrentState(), swerve.getModule(3).getCurrentState()};

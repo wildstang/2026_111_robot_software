@@ -3,11 +3,14 @@ package org.wildstang.sample.subsystems.targeting;
 // ton of imports
 import org.wildstang.framework.subsystems.Subsystem;
 import org.wildstang.sample.robot.WsSubsystems;
+import org.wildstang.sample.subsystems.Turret;
+import org.wildstang.sample.subsystems.Turret.GameStates;
 import org.wildstang.sample.subsystems.swerve.DriveConstants;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import org.wildstang.sample.subsystems.targeting.LimelightHelpers.PoseEstimate;
 
 import java.util.Optional;
+import java.util.Vector;
 
 import org.wildstang.framework.core.Core;
 
@@ -43,6 +46,7 @@ public class WsPose implements Subsystem {
     
     public int currentID = 0;
     public SwerveDrive swerve;
+    private Turret turret;
 
     // WPI blue relative (m and CCW rad)
     public Pose2d odometryPose = new Pose2d();
@@ -65,6 +69,7 @@ public class WsPose implements Subsystem {
     @Override
     public void initSubsystems() {
         swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
+        turret = (Turret) Core.getSubsystemManager().getSubsystem(WsSubsystems.TURRET);
         left = new WsAprilTagLL("limelight-left", swerve::getMegaTag2Yaw);
         right = new WsAprilTagLL("limelight-right", swerve::getMegaTag2Yaw);
         front = new WsAprilTagLL("limelight-object", swerve::getMegaTag2Yaw);
@@ -82,7 +87,6 @@ public class WsPose implements Subsystem {
     @Override
     public void update() {
         object.update();
-
         int bestIndex = -1;
         double bestStdDev = Double.MAX_VALUE;
         PoseEstimate bestEstimate = null;
@@ -106,7 +110,7 @@ public class WsPose implements Subsystem {
         }
 
         odometryPosePublisher.set(odometryPose);
-        estimatedPosePublisher.set(estimatedPose);
+        estimatedPosePublisher.set(estimatedPose);        
     }
 
     public double getStdDev(Optional<PoseEstimate> estimate) {
@@ -166,7 +170,6 @@ public class WsPose implements Subsystem {
 
     // YEAR SUBSYSTEM ACCESS METHODS
 
-
     /**
      * Can the object detection camera see a coral
      * @return true if a coral is present
@@ -223,5 +226,133 @@ public class WsPose implements Subsystem {
     @Override
     public String getName() {
         return "Ws Pose";
+    }
+
+    public double getFlywheelFeedVelocity(){
+        return 0;
+    }
+    public double getFlywheelShootVelocity(){
+        return 0;
+    }
+    public double getHoodFeedPosition(){
+        return 0;
+    }
+    public double getHoodShootPosition(){
+        return 0;
+    }
+    
+    // Returns double array with turret angle wanted and also the zone we are in: firing game state for alliance zone and homing for neutral
+    //rather than an object[], we can probably return a GameState enum (from turret) in one method,
+    //and then a second method that takes in a GameState and returns the double of the angle
+    public double angleOfTurret(){
+       
+        double desiredTurretAngle = 0;
+        Pose2d robotPose = estimatedPose;
+        double hubXDistance = VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX();
+        double hubYDistance = VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getY();
+
+        if(robotPose.getX() < VisionConsts.ALLIANCE_ZONE){
+            // in our alliance zone
+            desiredTurretAngle = Math.atan2((hubYDistance),hubXDistance);
+            turret.turretState = Turret.GameStates.FIRING;
+            
+        }else if(robotPose.getX() > VisionConsts.ALLIANCE_ZONE){
+            // in the neutral zone
+            if(robotPose.getY() > VisionConsts.halfFieldY){
+                double feedZoneXDistance = VisionConsts.highFeedPos[0] - estimatedPose.getX();
+                double feedZoneYDistance = VisionConsts.highFeedPos[1] - estimatedPose.getY();
+
+                desiredTurretAngle = Math.atan2(feedZoneYDistance,feedZoneXDistance);
+                turret.turretState = Turret.GameStates.HOMING; 
+            }else if(robotPose.getY() < VisionConsts.halfFieldY){
+                double feedZoneXDistance = VisionConsts.lowFeedPos[0] - estimatedPose.getX();
+                double feedZoneYDistance = VisionConsts.lowFeedPos[1] - estimatedPose.getY();
+
+                desiredTurretAngle = Math.atan2(feedZoneYDistance,feedZoneXDistance);
+                turret.turretState = Turret.GameStates.HOMING; 
+
+            }
+                
+                //we'll also need another method for below (maybe in the turret subsystem)
+                //to get from field-centric angle to robot-centric angle.
+                //we'll need to pull in the gyro value from swerveDrive to do that
+                
+            
+        }
+        return Math.toDegrees(desiredTurretAngle);
+        
+            
+    }
+
+    public double fromFieldToRobotAngle(double fieldAngle){
+        return (fieldAngle - swerve.getGyroAngle() - VisionConsts.turretOffset+1080)%360;
+    }
+
+    public double shootOnTheMove(){
+        //shoot on da move
+        double dix = VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX();
+        double diy = VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getY();
+        //use feed positions instead of the hub if we are feeding
+        if (estimatedPose.getX() > VisionConsts.ALLIANCE_ZONE){
+            turret.turretState = Turret.GameStates.HOMING;
+            if (estimatedPose.getY() < VisionConsts.halfFieldY){
+                dix = VisionConsts.lowFeedPos[0] - estimatedPose.getX();
+                diy = VisionConsts.lowFeedPos[1] - estimatedPose.getY();
+            } else {
+                dix = VisionConsts.highFeedPos[0] - estimatedPose.getX();
+                diy = VisionConsts.highFeedPos[1] - estimatedPose.getY();
+            }
+        } else turret.turretState = Turret.GameStates.FIRING;
+        double dih = Math.hypot(dix, diy);
+        double robotVelx = swerve.getSpeeds().vxMetersPerSecond;
+        double robotVely = swerve.getSpeeds().vyMetersPerSecond;
+        
+        double dnewx = dix - robotVelx * ShotData.getTOF(dih);
+        double dnewy = diy - robotVely * ShotData.getTOF(dih);
+        double dnew = Math.hypot(dnewx, dnewy);
+        double percentdiff = (dnew - dih)/dih;
+        dih = dnew;
+        double count = 0;
+        double dnewTof = ShotData.getTOF(dnew);
+        while((percentdiff >= 0.02) || (count <= 6  )){
+            count++;
+            dnewx = dix - robotVelx * dnewTof;
+            dnewy = diy - robotVely * dnewTof;
+            dnew = Math.hypot(dnewx, dnewy);
+            percentdiff = (dnew - dih)/dih;
+            dih = dnew;
+            dnewTof = ShotData.getTOF(dnew);
+        }
+        return Math.toDegrees(Math.atan2(dnewy,dnewx));
+    }
+
+      public double distanceToTarget(Translation2d target) {
+        double offsetX = target.getX() - estimatedPose.getX();
+        double offsetY = target.getY() - estimatedPose.getY();
+        return (Math.sqrt(offsetX*offsetX + offsetY*offsetY));
+    }
+
+    public boolean goodToFire(){
+        GameStates state = turret.turretState;
+        if(state.equals(GameStates.FIRING)){
+            //in alliance zone
+            if(estimatedPose.getX() <= 158.6 && estimatedPose.getX() >= 118.6 && estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
+                //right up against the hub
+                return false;
+            }
+            if(estimatedPose.getX() < 46 && estimatedPose.getY() >= 120 && estimatedPose.getY() <= 160){
+                //behind climbing area
+                return false;
+            }
+
+            }
+        if(state.equals(GameStates.HOMING)){
+             if(estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
+                //behind the hub
+                return false;
+            }
+                
+        }
+        return true;
     }
 }
