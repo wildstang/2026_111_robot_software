@@ -44,6 +44,7 @@ public class Ballpath implements Subsystem{
     public void init() {
         
         ballpathMotor = (WsTalon) WsOutputs.BALLPATH.get();
+        ballpathMotor.setCurrentLimit(70, 70);
 
         operatorA = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_FACE_LEFT);
         operatorA.addInputListener(this);

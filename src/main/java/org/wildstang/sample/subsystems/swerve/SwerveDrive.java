@@ -323,6 +323,9 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     public void usePID(boolean use) {
         autoUsePID = use;
     }
+    public void resetTranslation(double x, double y){
+        swerve.resetTranslation(new Translation2d(x, y));
+    }
 
     /** sets the autonomous heading controller to a new target */
     @Deprecated
@@ -350,7 +353,7 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
      * @return Returns the field relative CCW gyro angle for use with Limelight MegaTag2
      */
     public double getMegaTag2Yaw(){
-        return (Math.toDegrees(getGyroAngle()) + (Core.isBlue() ? 0 : 180));
+        return (getGyroAngle() + (Core.isBlue() ? 0 : 180));
     }
     /** 
      * @return Returns alliance relative CCW Rotation2d gyro angle for use with always alliance relative pose

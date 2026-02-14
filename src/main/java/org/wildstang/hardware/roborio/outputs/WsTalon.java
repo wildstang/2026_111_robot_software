@@ -21,6 +21,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
@@ -204,6 +205,16 @@ public class WsTalon extends WsMotorController {
         slot0.kD = D;
         slot0.kS = S;
         slot0.kV = V;
+        motorApply.apply(slot0);
+    }
+    public void initClosedLoop(double P, double I, double D, double S, double V, boolean sign){
+        Slot0Configs slot0 = new Slot0Configs();
+        slot0.kP = P;
+        slot0.kI = I;
+        slot0.kD = D;
+        slot0.kS = S;
+        slot0.kV = V;
+        slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
         motorApply.apply(slot0);
     }
 
