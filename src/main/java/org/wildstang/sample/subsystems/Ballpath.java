@@ -11,6 +11,8 @@ import org.wildstang.sample.robot.WsOutputs;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.targeting.WsPose;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 public class Ballpath implements Subsystem{
     
     Launcher launcher;
@@ -18,21 +20,23 @@ public class Ballpath implements Subsystem{
     WsPose pose;
 
     private WsTalon ballpathMotor;
-    private WsJoystickButton operatorA, driverLS, operatorLS, operatorRS;
+    private WsJoystickButton operatorA, operatorLS, operatorRS;
     private WsJoystickAxis driverLT, operatorLT;
+
+    private enum GameState {FIRING, READYING, REVERSE, STOP}
+    private GameState state = GameState.STOP;
 
 
 
     @Override
     public void inputUpdate(Input source) {
         if(operatorA.getValue()){
-            ballpathMotor.setSpeed(-0.2);
-        }else if((driverLS.getValue() || (driverLT.getValue() > 0.5) || operatorLS.getValue()
-        || operatorLT.getValue() > 0.5 || operatorRS.getValue()) && 
-        turret.goodToFire() && launcher.goodToFire){
-            ballpathMotor.setSpeed(1);
+            state = GameState.REVERSE;
+        }else if(driverLT.getValue() > 0.5 || operatorLS.getValue()
+        || operatorLT.getValue() > 0.5 || operatorRS.getValue()){
+            if (state != GameState.FIRING) state = GameState.READYING;
         }else{
-            ballpathMotor.setSpeed(0);
+            state = GameState.STOP;
         }
     }
 
@@ -43,9 +47,6 @@ public class Ballpath implements Subsystem{
 
         operatorA = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_FACE_LEFT);
         operatorA.addInputListener(this);
-
-        driverLS = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.DRIVER_LEFT_SHOULDER);
-        driverLS.addInputListener(this);
 
         driverLT = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.DRIVER_LEFT_TRIGGER);
         driverLT.addInputListener(this);
@@ -71,7 +72,22 @@ public class Ballpath implements Subsystem{
 
     @Override
     public void update() {
+        if (state == GameState.READYING){
+            if (turret.goodToFire() && launcher.goodToFire) {
+                ballpathMotor.setSpeed(1.0);
+                state = GameState.FIRING;
+            }
+            else ballpathMotor.setSpeed(0);
+        } else if (state == GameState.FIRING){
+            ballpathMotor.setSpeed(1.0);
+        } else if (state == GameState.REVERSE){
+            ballpathMotor.setSpeed(-0.2);
+        } else if (state == GameState.STOP){
+            ballpathMotor.setSpeed(0);
+        }
         
+        SmartDashboard.putString("Ballpath state", state.toString());
+        SmartDashboard.putNumber("Ballpath current", ballpathMotor.getCurret());
     }
 
     @Override
