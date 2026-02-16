@@ -214,7 +214,7 @@ public class WsTalon extends WsMotorController {
         slot0.kD = D;
         slot0.kS = S;
         slot0.kV = V;
-        slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
+        slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
         motorApply.apply(slot0);
     }
 

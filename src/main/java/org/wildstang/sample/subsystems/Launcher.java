@@ -54,7 +54,7 @@ public class Launcher implements Subsystem{
     public void init() {
         flywheelMotor = (WsTalon) WsOutputs.FLYWHEEL.get();
         flywheelMotor.initClosedLoop(0.08,0.0,0.0);
-        flywheelMotor.setCurrentLimit(70, 70);
+        flywheelMotor.setCurrentLimit(120, 70);
 
         hoodMotor = (WsTalon) WsOutputs.HOOD.get();
         hoodMotor.initClosedLoop(0.2, 0.0,0.0);

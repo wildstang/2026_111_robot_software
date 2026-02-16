@@ -49,10 +49,10 @@ public class WsPose implements Subsystem {
     private Turret turret;
 
     // WPI blue relative (m and CCW rad)
-    public Pose2d odometryPose = new Pose2d();
+    //public Pose2d odometryPose = new Pose2d();
     public Pose2d estimatedPose = new Pose2d();
 
-    StructPublisher<Pose2d> odometryPosePublisher = NetworkTableInstance.getDefault().getStructTopic("odometryPose", Pose2d.struct).publish();
+    //StructPublisher<Pose2d> odometryPosePublisher = NetworkTableInstance.getDefault().getStructTopic("odometryPose", Pose2d.struct).publish();
     StructPublisher<Pose2d> estimatedPosePublisher = NetworkTableInstance.getDefault().getStructTopic("estimatedPose", Pose2d.struct).publish();
     StructPublisher<Pose2d> coralPosePublisher = NetworkTableInstance.getDefault().getStructTopic("coralPose", Pose2d.struct).publish();
 
@@ -109,7 +109,7 @@ public class WsPose implements Subsystem {
         //     coralPosePublisher.set(new Pose2d(getCoralPose().get(), new Rotation2d()));
         // }
 
-        odometryPosePublisher.set(odometryPose);
+        //odometryPosePublisher.set(odometryPose);
         estimatedPosePublisher.set(estimatedPose);        
     }
 
@@ -131,7 +131,7 @@ public class WsPose implements Subsystem {
     */
     public void resetPose(Pose2d initialPose) {
         estimatedPose = initialPose;
-        odometryPose = initialPose;
+        //odometryPose = initialPose;
         poseBuffer.clear();
     }
 
@@ -139,7 +139,7 @@ public class WsPose implements Subsystem {
         
         // Add pose to buffer at timestamp
         poseBuffer.addSample(Timer.getTimestamp(), newPose);
-        odometryPose = newPose;
+        //odometryPose = newPose;
         estimatedPose = newPose;
     }
 
@@ -153,20 +153,20 @@ public class WsPose implements Subsystem {
         }
 
         // sample --> odometryPose transform and backwards of that
-        var sampleToOdometryTransform = new Transform2d(sample.get(), odometryPose);
-        var odometryToSampleTransform = new Transform2d(odometryPose, sample.get());
+        //var sampleToOdometryTransform = new Transform2d(sample.get(), odometryPose);
+        //var odometryToSampleTransform = new Transform2d(odometryPose, sample.get());
 
         // get old estimate by applying odometryToSample Transform
-        Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
+        //Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
 
         // difference between estimate and vision pose
-        Transform2d transform = new Transform2d(estimateAtTime, observation.pose);
+        //Transform2d transform = new Transform2d(estimateAtTime, observation.pose);
         //transform = transform.times(Math.max(1, weight));
 
         // Recalculate current estimate by applying scaled transform to old estimate
         // then replaying odometry data
         // estimatedPose = estimateAtTime.plus(transform).plus(sampleToOdometryTransform);
-        estimatedPose = observation.pose; 
+        //estimatedPose = observation.pose; 
         swerve.resetTranslation(observation.pose.getX(), observation.pose.getY());
     }
 
