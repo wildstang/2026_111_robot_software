@@ -196,7 +196,8 @@ public class WsTalon extends WsMotorController {
         slot0.kP = P;
         slot0.kI = I;
         slot0.kD = D;
-        motorApply.apply(slot0);
+        config.withSlot0(slot0);
+        applyConfigs();
     }
     public void initClosedLoop(double P, double I, double D, double S, double V){
         Slot0Configs slot0 = new Slot0Configs();
@@ -205,7 +206,8 @@ public class WsTalon extends WsMotorController {
         slot0.kD = D;
         slot0.kS = S;
         slot0.kV = V;
-        motorApply.apply(slot0);
+        config.withSlot0(slot0);
+        applyConfigs();
     }
     public void initClosedLoop(double P, double I, double D, double S, double V, boolean sign){
         Slot0Configs slot0 = new Slot0Configs();
@@ -215,7 +217,8 @@ public class WsTalon extends WsMotorController {
         slot0.kS = S;
         slot0.kV = V;
         slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
-        motorApply.apply(slot0);
+        config.withSlot0(slot0);
+        applyConfigs();
     }
 
     /*
@@ -228,7 +231,8 @@ public class WsTalon extends WsMotorController {
         slotNew.kP = P;
         slotNew.kI = I;
         slotNew.kD = D;
-        motorApply.apply(slotNew);
+        config.withSlot1(slotNew);
+        applyConfigs();
     }
     public void addClosedLoop(double P, double I, double D, double S, double V){
         Slot1Configs slotNew = new Slot1Configs();
@@ -237,7 +241,8 @@ public class WsTalon extends WsMotorController {
         slotNew.kD = D;
         slotNew.kS = S;
         slotNew.kV = V;
-        motorApply.apply(slotNew);
+        config.withSlot1(slotNew);
+        applyConfigs();
     }
 
     /**
@@ -245,6 +250,7 @@ public class WsTalon extends WsMotorController {
      * @param target the encoder target value to track to
      */
     public void setPosition(double target){
+        positionRequest.withSlot(0);
         positionRequest.withPosition(target);
         currentRequest = RequestType.POSITION;
     }

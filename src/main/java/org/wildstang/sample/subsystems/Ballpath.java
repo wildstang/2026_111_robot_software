@@ -80,7 +80,8 @@ public class Ballpath implements Subsystem{
             }
             else ballpathMotor.setSpeed(0);
         } else if (state == GameState.FIRING){
-            ballpathMotor.setSpeed(1.0);
+            if (turret.goodToFire()) ballpathMotor.setSpeed(1.0);
+            else ballpathMotor.setSpeed(0.0);
         } else if (state == GameState.REVERSE){
             ballpathMotor.setSpeed(-0.2);
         } else if (state == GameState.STOP){

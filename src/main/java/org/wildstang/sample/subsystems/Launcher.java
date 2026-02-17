@@ -111,7 +111,7 @@ public class Launcher implements Subsystem{
                 desiredHoodShootPos = pose.getHoodShootPosition();
 
                 flywheelMotor.setVelocity(desiredFlywheelShootVel);
-                hoodMotor.setPosition(desiredHoodShootPos+hoodStart);
+                setHood(desiredHoodShootPos);
 
                 goodToFire = isGoodToFire(flywheelVelocity, hoodPosition);
                             
@@ -124,7 +124,7 @@ public class Launcher implements Subsystem{
                 desiredHoodFeedPos = pose.getHoodFeedPosition();
 
                 flywheelMotor.setVelocity(desiredFlywheelFeedVel);
-                hoodMotor.setPosition(desiredHoodFeedPos+hoodStart);
+                setHood(desiredHoodFeedPos);
 
                 goodToFire = isGoodToFire(flywheelVelocity, hoodPosition);
 
@@ -134,7 +134,7 @@ public class Launcher implements Subsystem{
                 
                 goodToFire = false;
                 flywheelMotor.setSpeed(0.0);
-                hoodMotor.setPosition(0.0+hoodStart);
+                setHood(0.0);
 
                 break;
 
@@ -207,6 +207,11 @@ public class Launcher implements Subsystem{
     @Override
     public String getName() {
         return "Launcher";
+    }
+    private void setHood(double hoodPos){
+        if (hoodPos > 6.0) hoodMotor.setPosition(hoodStart+6.0);
+        else if (hoodPos < 0.0) hoodMotor.setPosition(hoodStart);
+        else hoodMotor.setPosition(hoodPos+hoodStart);
     }
     
 }

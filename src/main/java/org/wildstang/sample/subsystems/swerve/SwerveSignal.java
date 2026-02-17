@@ -40,7 +40,8 @@ public class SwerveSignal {
         if (state == controlState.ROTLOCKED){
             return driveLockedCommand.withVelocityX(getVertical() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
-                .withTargetDirection(new Rotation2d(Math.toRadians(getRotTarget())));
+                .withTargetDirection(new Rotation2d(Math.toRadians(getRotTarget())))
+                .withRotationalDeadband(0.05);
             //.withTargetRateFeedforward(double) to potentially include rotation rate
         } else if (state == controlState.SNAKE){
             if (getVertical() != 0 || getHorizontal() != 0) {

@@ -1,7 +1,7 @@
 package org.wildstang.sample.subsystems.swerve;
 
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.Logger;
+// import org.littletonrobotics.junction.LogTable;
+// import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 import org.wildstang.framework.core.Core;
 import org.wildstang.framework.io.inputs.Input;
@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * outputs: four swerveModule objects
  * description: controls a swerve drive for four swerveModules through autonomous and teleoperated control
  */
-public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
+public class SwerveDrive extends SwerveDriveTemplate {
     private AnalogInput leftStickHorizontal;//translation joystick x
     private AnalogInput leftStickVertical;//translation joystick y
     private AnalogInput rightStickHorizontal;//rot joystick
@@ -66,19 +66,21 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     private SwerveSignal swerveSignal = new SwerveSignal();
 
     private WsSwerveHelper swerveHelper = new WsSwerveHelper();
-    StructArrayPublisher<SwerveModuleState> moduleStatePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("ModuleStates", SwerveModuleState.struct).publish();
-    StructArrayPublisher<SwerveModuleState> moduleIdealPublisher = NetworkTableInstance.getDefault().getStructArrayTopic("Module real states", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> moduleStatePublisher = 
+        NetworkTableInstance.getDefault().getStructArrayTopic("ModuleStates", SwerveModuleState.struct).publish();
+    StructArrayPublisher<SwerveModuleState> moduleIdealPublisher = 
+        NetworkTableInstance.getDefault().getStructArrayTopic("Module real states", SwerveModuleState.struct).publish();
     public ChassisSpeeds speeds;
 
 
     private WsPose pose;
 
-    private Translation2d coralPoint;
     private Pose2d targetPose;
-    StructPublisher<Pose2d> targetPosePublisher = NetworkTableInstance.getDefault().getStructTopic("targetPose", Pose2d.struct).publish();
+    StructPublisher<Pose2d> targetPosePublisher = 
+        NetworkTableInstance.getDefault().getStructTopic("targetPose", Pose2d.struct).publish();
 
 
-    public enum DriveType {TELEOP, AUTO, SNAKE, CORALINTAKE};
+    public enum DriveType {TELEOP, AUTO, SNAKE};
     private DriveType driveState;
 
     @Override
@@ -140,12 +142,6 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         //if the rotational joystick is being used, the robot should not be auto tracking heading
         if (rotSpeed != 0 || swerveSignal.currentState() == controlState.MANUAL) {
             swerveSignal.setFreeRotation(rotSpeed);
-        }
-        if (faceLeft.getValue()){
-            swerve.resetTranslation(new Translation2d(5.0, 4.0));
-        }
-        if (faceRight.getValue()){
-            swerve.resetTranslation(new Translation2d(2.0, 5.0));
         }
     }
  
@@ -211,46 +207,14 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
 
     @Override
     public void update() {
-        Logger.processInputs("Swerve", this);
+        // Logger.processInputs("Swerve", this);
         pose.addOdometryObservation(swerve.getState().Pose);
-        // Reset coral point
-        if (driveState != DriveType.CORALINTAKE) {
-            coralPoint = null;
-            if (driveState != DriveType.AUTO) {
-                pose.setPipelineObject(false);
-            } else pose.setPipelineObject(true);
-        }
 
         if (driveState == DriveType.TELEOP) {
             this.swerveSignal.setTranslation(horizontalPower, verticalPower);
 
         } else if (driveState == DriveType.SNAKE){
-            this.swerveSignal.setSnake(verticalPower, horizontalPower);
-        // If we want to use object detection pipeline to align to coral
-        // Aligns heading to face coral and then p-loop to intake it
-        // Keeps driving to last seen point but doesn't turn if it can't see a coral
-        } else if (driveState == DriveType.CORALINTAKE) {
-            pose.setPipelineObject(true);
-            // Update point
-            if (pose.getCoralPose().isPresent()) {
-                Translation2d newCoralPoint = pose.getCoralPose().get();
-                // Avoid updating to a new coral after intaking
-                // Only update coralpoint if newCoralPoint is less than .5 meters further away from our robot
-                if (coralPoint == null) {
-                    coralPoint = newCoralPoint;
-                } else if (pose.estimatedPose.getTranslation().getDistance(newCoralPoint) - pose.estimatedPose.getTranslation().getDistance(coralPoint) < 0.5) {
-                    coralPoint = newCoralPoint;
-                }
-            }
-            // if (coralPoint != null && !coralPath.hasCoral()) {
-            //     // Account for intake position so when our robot is at intakeAdjustedPoint the ground intake is centered on the coral
-            //     Translation2d intakeAdjustedPoint = new  Pose2d(coralPoint, odoAngle()).plus(VisionConsts.intakeOffset.inverse()).getTranslation();
-            //     targetPosePublisher.set(new Pose2d(intakeAdjustedPoint, new Rotation2d()));
-            //     swerveSignal.setDriveToPoint(new Pose2d(intakeAdjustedPoint, Rotation2d.fromDegrees(pose.turnToTarget(intakeAdjustedPoint))));
-            // } else {
-                this.swerveSignal.setTranslation(horizontalPower, verticalPower);
-            // }
-            
+            this.swerveSignal.setSnake(verticalPower, horizontalPower); 
         } else if (driveState == DriveType.AUTO) {
             swerveSignal.setDriveToPoint(targetPose, autoMaxSpeed);
         }
@@ -260,14 +224,11 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
         SmartDashboard.putNumber("Y Power", verticalPower);
         SmartDashboard.putNumber("# Robot X", pose.estimatedPose.getX());
         SmartDashboard.putNumber("# Robot Y", pose.estimatedPose.getY());
-        SmartDashboard.putNumber("* swerve X pos", swerve.getState().Pose.getX());
-        SmartDashboard.putNumber("* swerve Y pos", swerve.getState().Pose.getY());
         SmartDashboard.putNumber("rotSpeed", swerveSignal.getRotation());
         SmartDashboard.putNumber("Gyro Reading", swerve.getState().Pose.getRotation().getDegrees());//getGyroAngle());
         SmartDashboard.putString("Drive mode", driveState.toString());
         SmartDashboard.putString("Drive Request Type", swerveSignal.currentState().toString());
         SmartDashboard.putNumber("Rotation target", swerveSignal.getRotTarget());
-        SmartDashboard.putNumber("@ mega2 gyro", getMegaTag2Yaw());
         SmartDashboard.putNumber("@ speed", speedMagnitude());
         if (targetPose != null){
             targetPosePublisher.set(targetPose);
@@ -406,13 +367,13 @@ public class SwerveDrive extends SwerveDriveTemplate implements LoggableInputs {
     }
 
 
-    @Override
-    public void toLog(LogTable table) {
-        table.put("gyroReading", getGyroAngle());
-    }
+    // @Override
+    // public void toLog(LogTable table) {
+    //     table.put("gyroReading", getGyroAngle());
+    // }
 
-    @Override
-    public void fromLog(LogTable table) {
-        //gyroReading = table.get("gyroReading", gyroReading);
-    }
+    // @Override
+    // public void fromLog(LogTable table) {
+    //     //gyroReading = table.get("gyroReading", gyroReading);
+    // }
 }

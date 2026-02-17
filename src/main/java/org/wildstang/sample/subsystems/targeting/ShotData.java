@@ -5,13 +5,15 @@ public final class ShotData {
     private static double mToIn = 39.37;
 
     private static double[] distances = new double[]
-        {102,  112,  124,   133,  142,   167,   180,    205,    230,   260,    290};
+        {43.5,  53.5,  71.5,  102.5, 140.5, 178.5, 222.5, 262.5, 293.5};
+        //bumpers from edge of hub
+    //  0       10     28      59     97     135    179    219    250
     private static double[] flywheelPower = new double[]
-        {0.65, 0.65, 0.65,  0.65, 0.65,  0.65,  0.65,   0.7,    0.725, 0.75,   0.775};
+        {0.415, 0.415, 0.425, 0.480, 0.530, 0.580, 0.650, 0.700, 0.750};
     private static double[] hoodAngle = new double[]
-        {1.76, 2.01, 2.352, 2.38, 2.467, 2.718, 3.0605, 3.2075, 3.483, 3.9775, 4.70};
+        {1.30,  2.11,  2.71,  3.37,  3.98,  4.56,  5.06,  5.52,  5.84};
     private static double[] tof = new double[]
-        {1.4,  1.4,  1.405, 1.425,1.487, 1.45,  1.4,    1.51,   1.58,  1.61,   1.55};
+        {0.9,   0.9,   0.98,  1.08,  1.18,  1.28,  1.38,  1.44,  1.60};
 
     public static double getTOF(double shotDistance){
         return lookupTable(shotDistance*mToIn, tof);
