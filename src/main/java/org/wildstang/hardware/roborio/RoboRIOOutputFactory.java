@@ -70,7 +70,7 @@ public class RoboRIOOutputFactory implements OutputFactory {
         else if (config instanceof WsTalonConfig) {
             WsTalonConfig c = (WsTalonConfig) config;
             out = new WsTalon(p_output.getName(), c.getChannel(), c.getDefault(),
-                                c.getType());
+                                c.getType(), c.getCanivore());
         }
         //Note a WsTalonFollower must be defined after its corresponding WsPhoenix
         else if (config instanceof WsTalonFollowerConfig) {

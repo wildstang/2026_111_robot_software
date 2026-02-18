@@ -57,12 +57,11 @@ public class WsTalon extends WsMotorController {
      * @param channel Motor controller CAN constant.
      * @param p_default Default output value.
      */
-    public WsTalon(String name, int channel,  double p_default, WsMotorControllers controller) {
+    public WsTalon(String name, int channel,  double p_default, WsMotorControllers controller, String canivore) {
         super(name, p_default);
-        motor = new TalonFX(channel, "mechanism_canivore");
+        motor = new TalonFX(channel, canivore);//"mechanism_canivore");
         motorControllerType = controller;
         motorApply = motor.getConfigurator();
-        //percentRequest.withEnableFOC(true);
     }
 
     /**
@@ -91,6 +90,11 @@ public class WsTalon extends WsMotorController {
         motorConfig.withNeutralMode(NeutralModeValue.Brake);
         config.withMotorOutput(motorConfig);
         applyConfigs();
+    }
+
+    public void enableFOC(){
+        percentRequest.withEnableFOC(true);
+        velocityRequest.withEnableFOC(true);
     }
 
     /**

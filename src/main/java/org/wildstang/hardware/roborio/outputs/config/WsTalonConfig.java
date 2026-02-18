@@ -13,6 +13,7 @@ public class WsTalonConfig implements OutputConfig {
     private double m_default;
     private WsMotorControllers controller;
     private boolean invert;
+    private String canivore;
 
     /**
      * Construct the Phoenix config.
@@ -45,6 +46,14 @@ public class WsTalonConfig implements OutputConfig {
         this.controller = controller;
         this.invert = invert;
         m_default = p_default;
+        canivore = "mechanism_canivore";
+    }
+    public WsTalonConfig(int channel, WsMotorControllers controller, String canivore){
+        m_channel = channel;
+        this.controller = controller;
+        this.invert = false;
+        m_default = 0;
+        this.canivore = canivore;
     }
 
     /**
@@ -77,6 +86,13 @@ public class WsTalonConfig implements OutputConfig {
      */
     public boolean isInverted() {
         return invert;
+    }
+
+    /**
+     * Returns String for canivore name
+     */
+    public String getCanivore(){
+        return canivore;
     }
 
     /**

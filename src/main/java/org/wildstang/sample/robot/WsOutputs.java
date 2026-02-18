@@ -41,8 +41,8 @@ public enum WsOutputs implements Outputs {
     BALLPATH("Ballpath", new WsTalonConfig(CANConstants.BALLPATH, WsMotorControllers.TALON_FX)),
     BALLPATH_FOLLOW("Ballpath follower", new WsTalonFollowerConfig(
     BALLPATH, CANConstants.BALLPATH_FOLLOW, WsMotorControllers.TALON_FX, false)),
-    INTAKE("Intake", new WsTalonConfig(CANConstants.INTAKE, WsMotorControllers.TALON_FX)),
-    INTAKE_DEPLOY("Intake Deploy", new WsTalonConfig(CANConstants.INTAKE_DEPLOY, WsMotorControllers.TALON_FX)),
+    INTAKE("Intake", new WsTalonConfig(CANConstants.INTAKE, WsMotorControllers.TALON_FX, "drive_canivore")),
+    INTAKE_DEPLOY("Intake Deploy", new WsTalonConfig(CANConstants.INTAKE_DEPLOY, WsMotorControllers.TALON_FX, "drive_canivore")),
     CLIMB1("Climb1", new WsTalonConfig(CANConstants.CLIMB1, WsMotorControllers.TALON_FX)),
     CLIMB2("Climb2", new WsTalonConfig(CANConstants.CLIMB2, WsMotorControllers.TALON_FX))
 
