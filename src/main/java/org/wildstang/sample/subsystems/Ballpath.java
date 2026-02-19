@@ -23,7 +23,7 @@ public class Ballpath implements Subsystem{
     private WsJoystickButton operatorA, operatorLS, operatorRS;
     private WsJoystickAxis driverLT, operatorLT;
 
-    private enum GameState {FIRING, READYING, REVERSE, STOP}
+    public enum GameState {FIRING, READYING, REVERSE, STOP}
     private GameState state = GameState.STOP;
 
 
@@ -104,6 +104,10 @@ public class Ballpath implements Subsystem{
     @Override
     public String getName() {
         return "Ballpath";
+    }
+
+    public void setBallpathState(GameState currentState){
+        state = currentState;
     }
     
     public void setMotorSpeed(double speed){

@@ -30,8 +30,8 @@ public class Intake implements Subsystem{
 
     private WsTalon intakeMotor, deployMotor;
 
-    private enum DeployState {IN, OUT, STOWED};
-    private enum IntakeState {INTAKING, NEUTRAL, REVERSE, SLOW};
+    public enum DeployState {IN, OUT, STOWED};
+    public enum IntakeState {INTAKING, NEUTRAL, REVERSE, SLOW};
     private DeployState deploy = DeployState.IN;
     private IntakeState direction = IntakeState.NEUTRAL;
 
@@ -144,6 +144,15 @@ public class Intake implements Subsystem{
     public String getName() {
         return "Intake";
     }
+
+   public void setDeployState(DeployState currState){
+        deploy = currState;
+   }
+
+   public void setIntakeState(IntakeState currentState){
+        direction = currentState;
+   }
+   
     public boolean goodToFire(){
         //we'll eventually replace with goodToFire methods from launcher, turret, and pose
         return true;
