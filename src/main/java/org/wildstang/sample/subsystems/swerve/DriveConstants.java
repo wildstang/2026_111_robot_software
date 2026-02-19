@@ -77,13 +77,13 @@ public final class DriveConstants {
     //find this from swerve website
     public static final LinearVelocity maxSpeed = MetersPerSecond.of(5.72);
     //this is causing jitter, leave at 0
-    private static final double coupleRatio = 0;//4.5;
+    private static final double coupleRatio = 4.5;
     //drive gear ratio
     private static final double driveRatio = 5.4;
     //steer gear ratio
     private static final double steerRatio = 12.1;
     //empirically find this, 2910 had 1.95
-    private static final double wheelRadius = 1.95;
+    private static final double wheelRadius = 1.95/39.37;
     private static final boolean invertLeft = false;
     private static final boolean invertRight = true;
     //width to center of wheel

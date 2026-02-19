@@ -34,12 +34,12 @@ public class WsPose implements Subsystem {
 
     private WsAprilTagLL left;
     private WsAprilTagLL right;
-    private WsAprilTagLL front;
+    // private WsAprilTagLL front;
 
     private WsAprilTagLL[] cameras; 
 
     // Object detection camera
-    public WsGamePieceLL object = new WsGamePieceLL("limelight-object");
+    // public WsGamePieceLL object = new WsGamePieceLL("limelight-object");
 
     private final double poseBufferSizeSec = 2;
     public final double visionSpeedThreshold = 3.0;
@@ -49,18 +49,11 @@ public class WsPose implements Subsystem {
     private Turret turret;
 
     // WPI blue relative (m and CCW rad)
-    public Pose2d odometryPose = new Pose2d();
     public Pose2d estimatedPose = new Pose2d();
 
-    StructPublisher<Pose2d> odometryPosePublisher = NetworkTableInstance.getDefault().getStructTopic("odometryPose", Pose2d.struct).publish();
     StructPublisher<Pose2d> estimatedPosePublisher = NetworkTableInstance.getDefault().getStructTopic("estimatedPose", Pose2d.struct).publish();
-    StructPublisher<Pose2d> coralPosePublisher = NetworkTableInstance.getDefault().getStructTopic("coralPose", Pose2d.struct).publish();
-
 
     private final TimeInterpolatableBuffer<Pose2d> poseBuffer = TimeInterpolatableBuffer.createBuffer(poseBufferSizeSec);
-
-    private SwerveModulePosition[] lastWheelPositions = {};
-    private Rotation2d lastGyroAngle = new Rotation2d();
 
     @Override
     public void inputUpdate(Input source) {
@@ -72,8 +65,7 @@ public class WsPose implements Subsystem {
         turret = (Turret) Core.getSubsystemManager().getSubsystem(WsSubsystems.TURRET);
         left = new WsAprilTagLL("limelight-left", swerve::getMegaTag2Yaw);
         right = new WsAprilTagLL("limelight-right", swerve::getMegaTag2Yaw);
-        front = new WsAprilTagLL("limelight-object", swerve::getMegaTag2Yaw);
-        cameras = new WsAprilTagLL[] {left, right, front};
+        cameras = new WsAprilTagLL[] {left, right};
     }
 
     @Override
@@ -86,7 +78,6 @@ public class WsPose implements Subsystem {
 
     @Override
     public void update() {
-        object.update();
         int bestIndex = -1;
         double bestStdDev = Double.MAX_VALUE;
         PoseEstimate bestEstimate = null;
@@ -105,11 +96,10 @@ public class WsPose implements Subsystem {
             addVisionObservation(bestEstimate, 1/bestStdDev);
         }
 
-        if (getCoralPose().isPresent()) {
-            coralPosePublisher.set(new Pose2d(getCoralPose().get(), new Rotation2d()));
-        }
+        // if (getCoralPose().isPresent()) {
+        //     coralPosePublisher.set(new Pose2d(getCoralPose().get(), new Rotation2d()));
+        // }
 
-        odometryPosePublisher.set(odometryPose);
         estimatedPosePublisher.set(estimatedPose);        
     }
 
@@ -131,7 +121,6 @@ public class WsPose implements Subsystem {
     */
     public void resetPose(Pose2d initialPose) {
         estimatedPose = initialPose;
-        odometryPose = initialPose;
         poseBuffer.clear();
     }
 
@@ -139,13 +128,12 @@ public class WsPose implements Subsystem {
         
         // Add pose to buffer at timestamp
         poseBuffer.addSample(Timer.getTimestamp(), newPose);
-
         estimatedPose = newPose;
     }
 
     private void addVisionObservation(PoseEstimate observation, double weight) {
 
-        SmartDashboard.putNumber("auto weight", weight);
+        // SmartDashboard.putNumber("auto weight", weight);
         Optional<Pose2d> sample = poseBuffer.getSample(observation.timestampSeconds);
         if (sample.isEmpty()) {
             // exit if not there
@@ -153,69 +141,24 @@ public class WsPose implements Subsystem {
         }
 
         // sample --> odometryPose transform and backwards of that
-        var sampleToOdometryTransform = new Transform2d(sample.get(), odometryPose);
-        var odometryToSampleTransform = new Transform2d(odometryPose, sample.get());
+        //var sampleToOdometryTransform = new Transform2d(sample.get(), odometryPose);
+        //var odometryToSampleTransform = new Transform2d(odometryPose, sample.get());
 
         // get old estimate by applying odometryToSample Transform
-        Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
+        //Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
 
         // difference between estimate and vision pose
-        Transform2d transform = new Transform2d(estimateAtTime, observation.pose);
+        //Transform2d transform = new Transform2d(estimateAtTime, observation.pose);
         //transform = transform.times(Math.max(1, weight));
 
         // Recalculate current estimate by applying scaled transform to old estimate
         // then replaying odometry data
-        estimatedPose = estimateAtTime.plus(transform).plus(sampleToOdometryTransform);
+        // estimatedPose = estimateAtTime.plus(transform).plus(sampleToOdometryTransform);
+        //estimatedPose = observation.pose; 
+        swerve.resetTranslation(observation.pose.getX(), observation.pose.getY());
     }
 
     // YEAR SUBSYSTEM ACCESS METHODS
-
-    /**
-     * Can the object detection camera see a coral
-     * @return true if a coral is present
-     */
-    public boolean coralInView(){
-        return object.targetInView();
-    }
-    /**
-     * Coral pose
-     * 
-     * @return field relative pose of the coral if the coral is present
-     */
-    public Optional<Translation2d> getCoralPose() {
-        if (!object.targetInView()) return Optional.empty();
-
-        Optional<Pose2d> sample = poseBuffer.getSample(object.timestamp);
-        if (sample.isEmpty()) {
-            // exit if not there
-            return Optional.empty();
-        }
-
-        // current odometryPose --> sample transformation
-        var odometryToSampleTransform = new Transform2d(odometryPose, sample.get());
-
-        // get old estimate at timestamp by applying odometryToSample Transform
-        Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
-
-        // Assumes the angle of depression is gonna be negative
-        double camToCoralDist = VisionConsts.camTransform.getZ() / -Math.tan(VisionConsts.camTransform.getRotation().getY() + Math.toRadians(object.ty));
-
-        // Transform from camera to coral
-        Transform2d camToCoralTransform = new Transform2d(Math.cos(Math.toRadians(-object.tx)) * camToCoralDist, Math.sin(Math.toRadians(-object.tx)) * camToCoralDist, Rotation2d.fromDegrees(-object.tx));
-
-        Transform2d camTransform2d = new Transform2d(VisionConsts.camTransform.getX(), VisionConsts.camTransform.getY(), new Rotation2d(VisionConsts.camTransform.getRotation().getZ()));
-        // Combines transformations to get coral pose in field coordinates
-        return Optional.of(estimateAtTime.plus(camTransform2d).plus(camToCoralTransform).getTranslation());
-    }
-
-    // Set the front limlelight (same camera referenced by both front and object) to object or april tag pipeline
-    public void setPipelineObject(boolean isObject) {
-        if (isObject) {
-            object.setPipeline(0);
-        } else {
-            front.setPipeline(1);
-        }
-    }
 
     public double turnToTarget(Translation2d target) {
         double offsetX = target.getX() - estimatedPose.getX();
@@ -229,16 +172,26 @@ public class WsPose implements Subsystem {
     }
 
     public double getFlywheelFeedVelocity(){
-        return 0;
+        if (estimatedPose.getY() > VisionConsts.halfFieldY){
+        return ShotData.getFlywheelPower(distanceToTarget(new Translation2d(VisionConsts.highFeedPos[0],
+            VisionConsts.highFeedPos[1])));
+        } else return ShotData.getFlywheelPower(distanceToTarget(new Translation2d(VisionConsts.lowFeedPos[0],
+            VisionConsts.lowFeedPos[1])));
     }
     public double getFlywheelShootVelocity(){
-        return 0;
+        return ShotData.getFlywheelPower(distanceToTarget(new Translation2d(VisionConsts.CENTER_OF_HUB[0],
+            VisionConsts.CENTER_OF_HUB[1])));
     }
     public double getHoodFeedPosition(){
-        return 0;
+        if (estimatedPose.getY() > VisionConsts.halfFieldY){
+        return ShotData.getHoodAngle(distanceToTarget(new Translation2d(VisionConsts.highFeedPos[0],
+            VisionConsts.highFeedPos[1])));
+        } else return ShotData.getHoodAngle(distanceToTarget(new Translation2d(VisionConsts.lowFeedPos[0],
+            VisionConsts.lowFeedPos[1])));
     }
     public double getHoodShootPosition(){
-        return 0;
+        return ShotData.getHoodAngle(distanceToTarget(new Translation2d(VisionConsts.CENTER_OF_HUB[0],
+            VisionConsts.CENTER_OF_HUB[1])));
     }
     
     // Returns double array with turret angle wanted and also the zone we are in: firing game state for alliance zone and homing for neutral
@@ -271,21 +224,13 @@ public class WsPose implements Subsystem {
                 desiredTurretAngle = Math.atan2(feedZoneYDistance,feedZoneXDistance);
                 turret.turretState = Turret.GameStates.HOMING; 
 
-            }
-                
-                //we'll also need another method for below (maybe in the turret subsystem)
-                //to get from field-centric angle to robot-centric angle.
-                //we'll need to pull in the gyro value from swerveDrive to do that
-                
-            
+            }             
         }
         return Math.toDegrees(desiredTurretAngle);
-        
-            
     }
 
     public double fromFieldToRobotAngle(double fieldAngle){
-        return (fieldAngle - swerve.getGyroAngle() - VisionConsts.turretOffset+1080)%360;
+        return (fieldAngle - swerve.getGyroAngle() + VisionConsts.turretOffset+1080)%360;
     }
 
     public double shootOnTheMove(){
@@ -336,22 +281,21 @@ public class WsPose implements Subsystem {
         GameStates state = turret.turretState;
         if(state.equals(GameStates.FIRING)){
             //in alliance zone
-            if(estimatedPose.getX() <= 158.6 && estimatedPose.getX() >= 118.6 && estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
-                //right up against the hub
-                return false;
-            }
+            // if(estimatedPose.getX() <= 158.6 && estimatedPose.getX() >= 118.6 && estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
+            //     //right up against the hub
+            //     return false;
+            // }
             if(estimatedPose.getX() < 46 && estimatedPose.getY() >= 120 && estimatedPose.getY() <= 160){
                 //behind climbing area
                 return false;
             }
 
-            }
+        }
         if(state.equals(GameStates.HOMING)){
              if(estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
                 //behind the hub
                 return false;
-            }
-                
+            }                
         }
         return true;
     }

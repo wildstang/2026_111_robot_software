@@ -73,7 +73,8 @@ public class Intake implements Subsystem{
         intakeMotor = (WsTalon) WsOutputs.INTAKE.get();
         deployMotor = (WsTalon) WsOutputs.INTAKE_DEPLOY.get();
         //we'll need to do some motor initializing here, intake_deploy PID and current limits for both of them
-    deployMotor.initClosedLoop(1,0,0);
+        deployMotor.initClosedLoop(1,0,0);
+        intakeMotor.enableFOC();
         intakeMotor.setCurrentLimit(120,70);
         deployMotor.setCurrentLimit(40,40);
 

@@ -21,6 +21,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
@@ -56,12 +57,11 @@ public class WsTalon extends WsMotorController {
      * @param channel Motor controller CAN constant.
      * @param p_default Default output value.
      */
-    public WsTalon(String name, int channel,  double p_default, WsMotorControllers controller) {
+    public WsTalon(String name, int channel,  double p_default, WsMotorControllers controller, String canivore) {
         super(name, p_default);
-        motor = new TalonFX(channel, "mechanism_canivore");
+        motor = new TalonFX(channel, canivore);//"mechanism_canivore");
         motorControllerType = controller;
         motorApply = motor.getConfigurator();
-        //percentRequest.withEnableFOC(true);
     }
 
     /**
@@ -90,6 +90,11 @@ public class WsTalon extends WsMotorController {
         motorConfig.withNeutralMode(NeutralModeValue.Brake);
         config.withMotorOutput(motorConfig);
         applyConfigs();
+    }
+
+    public void enableFOC(){
+        percentRequest.withEnableFOC(true);
+        velocityRequest.withEnableFOC(true);
     }
 
     /**
@@ -195,7 +200,8 @@ public class WsTalon extends WsMotorController {
         slot0.kP = P;
         slot0.kI = I;
         slot0.kD = D;
-        motorApply.apply(slot0);
+        config.withSlot0(slot0);
+        applyConfigs();
     }
     public void initClosedLoop(double P, double I, double D, double S, double V){
         Slot0Configs slot0 = new Slot0Configs();
@@ -204,7 +210,19 @@ public class WsTalon extends WsMotorController {
         slot0.kD = D;
         slot0.kS = S;
         slot0.kV = V;
-        motorApply.apply(slot0);
+        config.withSlot0(slot0);
+        applyConfigs();
+    }
+    public void initClosedLoop(double P, double I, double D, double S, double V, boolean sign){
+        Slot0Configs slot0 = new Slot0Configs();
+        slot0.kP = P;
+        slot0.kI = I;
+        slot0.kD = D;
+        slot0.kS = S;
+        slot0.kV = V;
+        slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
+        config.withSlot0(slot0);
+        applyConfigs();
     }
 
     /*
@@ -217,7 +235,8 @@ public class WsTalon extends WsMotorController {
         slotNew.kP = P;
         slotNew.kI = I;
         slotNew.kD = D;
-        motorApply.apply(slotNew);
+        config.withSlot1(slotNew);
+        applyConfigs();
     }
     public void addClosedLoop(double P, double I, double D, double S, double V){
         Slot1Configs slotNew = new Slot1Configs();
@@ -226,7 +245,8 @@ public class WsTalon extends WsMotorController {
         slotNew.kD = D;
         slotNew.kS = S;
         slotNew.kV = V;
-        motorApply.apply(slotNew);
+        config.withSlot1(slotNew);
+        applyConfigs();
     }
 
     /**
@@ -234,6 +254,7 @@ public class WsTalon extends WsMotorController {
      * @param target the encoder target value to track to
      */
     public void setPosition(double target){
+        positionRequest.withSlot(0);
         positionRequest.withPosition(target);
         currentRequest = RequestType.POSITION;
     }
