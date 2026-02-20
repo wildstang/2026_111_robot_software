@@ -21,6 +21,6 @@ public class VisionConsts {
     public static final double halfFieldY = 158.85*inToM;
     public static final double[] lowFeedPos = {79*inToM,76*inToM}; 
     public static final double[] highFeedPos = {79*inToM,214.7*inToM}; 
-    public static final double turretOffset = 135; //in degrees
+    public static final double turretOffset = 120; //in degrees
 
 }

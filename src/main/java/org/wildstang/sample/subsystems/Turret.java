@@ -21,7 +21,7 @@ public class Turret implements Subsystem{
     public double desiredTurretAngle;
     public SwerveDrive swerve;
 
-    private final double turretStartOffset = 135 * 43.5/360;
+    private final double turretStartOffset = 120 * 43.5/360;
 
     private WsTalon turretMotor;
 
@@ -34,7 +34,7 @@ public class Turret implements Subsystem{
     @Override
     public void init() {
         turretMotor = (WsTalon) WsOutputs.TURRET.get();
-        turretMotor.initClosedLoop(0.3, 0.0, 0.0, 0.03, 0.0, true);
+        turretMotor.initClosedLoop(0.1, 0.0, 0.0, 0.03, 0.0, true);
         turretMotor.setCurrentLimit(30,30);
 
         turretStart = turretMotor.getPosition()-(turretStartOffset);
@@ -67,13 +67,13 @@ public class Turret implements Subsystem{
         //this seems to assume it'll be up to 420
         double actualAngle = 0;
 
-        if(turretState == GameStates.FIRING){
+        // if(turretState == GameStates.FIRING){
 
-             if((desiredTurretAngle <= 240) && (desiredTurretAngle >= 0)){
-                actualAngle = desiredTurretAngle;
-            }else{
-                turretState = GameStates.HOMING;
-            }
+        //      if((desiredTurretAngle <= 240) && (desiredTurretAngle >= 0)){
+        //         actualAngle = desiredTurretAngle;
+        //     }else{
+        //         turretState = GameStates.HOMING;
+        //     }
             // doing logic to find out which level to go to (example: if you are above 360 and want to go to the lower coterminal angle)
             // if there is a coterminal angle, you decide whether to rotate ccw or cw
             //this will apply to both cases - see if actual angle being in the 360-420
@@ -89,7 +89,7 @@ public class Turret implements Subsystem{
             }else{
                 actualAngle = desiredTurretAngle;
             }*/
-        }else if(turretState == GameStates.HOMING){
+        // }else if(turretState == GameStates.HOMING){
 
             if((desiredTurretAngle <= 240) && (desiredTurretAngle >= 0)){
                 actualAngle = desiredTurretAngle;
@@ -115,7 +115,7 @@ public class Turret implements Subsystem{
                 
      //*/
              
-        }
+        // }
 
         return actualAngle;
     }

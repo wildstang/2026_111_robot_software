@@ -58,7 +58,7 @@ public class Launcher implements Subsystem{
         flywheelMotor.setCurrentLimit(120, 70);
 
         hoodMotor = (WsTalon) WsOutputs.HOOD.get();
-        hoodMotor.initClosedLoop(0.2, 0.0,0.0);
+        hoodMotor.initClosedLoop(0.2, 0.0,0.0, 0.03, 0.0, true);
         hoodMotor.setCurrentLimit(50,50);
 
         driverLeftTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.DRIVER_LEFT_TRIGGER);

@@ -278,8 +278,7 @@ public class WsPose implements Subsystem {
     }
 
     public boolean goodToFire(){
-        GameStates state = turret.turretState;
-        if(state.equals(GameStates.FIRING)){
+        if(estimatedPose.getX() < VisionConsts.ALLIANCE_ZONE){
             //in alliance zone
             // if(estimatedPose.getX() <= 158.6 && estimatedPose.getX() >= 118.6 && estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
             //     //right up against the hub
@@ -291,7 +290,7 @@ public class WsPose implements Subsystem {
             }
 
         }
-        if(state.equals(GameStates.HOMING)){
+        if(estimatedPose.getX() > VisionConsts.ALLIANCE_ZONE){
              if(estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
                 //behind the hub
                 return false;
