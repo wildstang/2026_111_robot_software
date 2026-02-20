@@ -1,13 +1,5 @@
 package org.wildstang.sample.robot;
 
-import org.littletonrobotics.junction.LogFileUtil;
-import org.littletonrobotics.junction.LoggedRobot;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.NT4Publisher;
-import org.littletonrobotics.junction.rlog.RLOGServer;
-import org.littletonrobotics.junction.wpilog.WPILOGReader;
-import org.littletonrobotics.junction.wpilog.WPILOGWriter;
-import org.littletonrobotics.urcl.URCL;
 import org.wildstang.framework.core.Core;
 import org.wildstang.framework.logger.Log;
 import org.wildstang.framework.logger.Log.LogLevel;
@@ -17,6 +9,7 @@ import org.wildstang.hardware.roborio.RoboRIOOutputFactory;
 import au.grapplerobotics.CanBridge;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -31,33 +24,33 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * 
  * @see <a href="https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/wpilibj/IterativeRobotBase.html">IterativeRobotBase</a>
  */
-public class Robot extends LoggedRobot {
+public class Robot extends TimedRobot {
 
     Core core;
-    private SendableChooser<LogLevel> logChooser;
+    // private SendableChooser<LogLevel> logChooser;
 
     public Robot(){
         // Set up data receivers & replay source
         switch (Core.currentMode) {
             case REAL:
             // Running on a real robot, log to NT, which will be logged to robot by DataLogManager
-            Logger.addDataReceiver(new NT4Publisher());
+            // Logger.addDataReceiver(new NT4Publisher());
             break;
     
             case SIM:
             // Running a physics simulator, log to NT
-            Logger.addDataReceiver(new NT4Publisher());
+            // Logger.addDataReceiver(new NT4Publisher());
             break;
     
             case REPLAY:
             // Replaying a log, set up replay source
-            setUseTiming(false); // Run as fast as possible
-            String logPath = LogFileUtil.findReplayLog();
-            Logger.setReplaySource(new WPILOGReader(logPath));
-            Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+            // setUseTiming(false); // Run as fast as possible
+            // String logPath = LogFileUtil.findReplayLog();
+            // Logger.setReplaySource(new WPILOGReader(logPath));
+            // Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
             break;
         }
-        Logger.registerURCL(URCL.startExternal(CANConstants.aliasMap));
+        // Logger.registerURCL(URCL.startExternal(CANConstants.aliasMap));
 
         CanBridge.runTCP();
     }
@@ -66,7 +59,7 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void robotInit() {
-        Log.info("Initializing robot.");
+        // Log.info("Initializing robot.");
 
         core = new Core(RoboRIOInputFactory.class, RoboRIOOutputFactory.class);
         core.createInputs(WsInputs.values());
@@ -75,16 +68,16 @@ public class Robot extends LoggedRobot {
         core.createAutoPrograms(WsAutoPrograms.values());
         
         // create smart dashboard option for LogLevel
-        logChooser = new SendableChooser<>();
-        logChooser.addOption(LogLevel.INFO.toString(), LogLevel.INFO);
-        logChooser.setDefaultOption(LogLevel.WARN.toString(), LogLevel.WARN);
-        logChooser.addOption(LogLevel.ERROR.toString(), LogLevel.ERROR);
-        logChooser.addOption(LogLevel.NONE.toString(), LogLevel.NONE);
-        SmartDashboard.putData("Log Level", logChooser);
+        // logChooser = new SendableChooser<>();
+        // logChooser.addOption(LogLevel.INFO.toString(), LogLevel.INFO);
+        // logChooser.setDefaultOption(LogLevel.WARN.toString(), LogLevel.WARN);
+        // logChooser.addOption(LogLevel.ERROR.toString(), LogLevel.ERROR);
+        // logChooser.addOption(LogLevel.NONE.toString(), LogLevel.NONE);
+        // SmartDashboard.putData("Log Level", logChooser);
 
         DataLogManager.start();
         //DriverStation.startDataLog(DataLogManager.getLog());
-        Logger.start();
+        // Logger.start();
     }
 
     /**
@@ -174,7 +167,7 @@ public class Robot extends LoggedRobot {
      */
     private void update() {
         // update log level from chooser
-        Log.setLevel(logChooser.getSelected());
+        // Log.setLevel(logChooser.getSelected());
         try {
             // Update all inputs, outputs and subsystems
             long start = System.currentTimeMillis();

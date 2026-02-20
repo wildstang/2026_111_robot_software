@@ -2,7 +2,7 @@ package org.wildstang.sample.subsystems.swerve;
 
 // import org.littletonrobotics.junction.LogTable;
 // import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
+// import org.littletonrobotics.junction.inputs.LoggableInputs;
 import org.wildstang.framework.core.Core;
 import org.wildstang.framework.io.inputs.Input;
 import org.wildstang.framework.io.inputs.AnalogInput;
@@ -15,6 +15,8 @@ import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.swerve.SwerveSignal.controlState;
 import org.wildstang.sample.subsystems.targeting.VisionConsts;
 import org.wildstang.sample.subsystems.targeting.WsPose;
+
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -72,7 +74,9 @@ public class SwerveDrive extends SwerveDriveTemplate {
         NetworkTableInstance.getDefault().getStructArrayTopic("Module real states", SwerveModuleState.struct).publish();
     public ChassisSpeeds speeds;
 
-
+    private SwerveDriveState swerveState;
+    private Pose2d swervePose;
+    private double swerveGyro;
     private WsPose pose;
 
     private Pose2d targetPose;
@@ -102,7 +106,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
         
         //reset gyro
         if (source == select && select.getValue()) {
-            while (swerve.getState().Pose.getRotation().getDegrees() > 0.1 || swerve.getState().Pose.getRotation().getDegrees() < -0.1){
+            while (swerveGyro > 0.1 || swerveGyro < -0.1){
                 swerve.resetRotation(new Rotation2d(0));
             }
             swerveSignal.setRotLocked(0);
@@ -225,7 +229,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
         SmartDashboard.putNumber("# Robot X", pose.estimatedPose.getX());
         SmartDashboard.putNumber("# Robot Y", pose.estimatedPose.getY());
         SmartDashboard.putNumber("rotSpeed", swerveSignal.getRotation());
-        SmartDashboard.putNumber("Gyro Reading", swerve.getState().Pose.getRotation().getDegrees());//getGyroAngle());
+        SmartDashboard.putNumber("Gyro Reading", swerveGyro);//getGyroAngle());
         SmartDashboard.putString("Drive mode", driveState.toString());
         SmartDashboard.putString("Drive Request Type", swerveSignal.currentState().toString());
         SmartDashboard.putNumber("Rotation target", swerveSignal.getRotTarget());
@@ -243,6 +247,9 @@ public class SwerveDrive extends SwerveDriveTemplate {
         verticalPower = 0;
         swerveSignal.setFreeRotation(0);
         setToTeleop();
+        swerveState = swerve.getState();
+        swervePose = swerveState.Pose;
+        swerveGyro = swervePose.getRotation().getDegrees();
     }
 
     @Override
@@ -306,7 +313,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
     }
 
     public double getGyroAngle() {
-        return swerve.getState().Pose.getRotation().getDegrees();
+        return swerveGyro;
     }  
 
     /**
@@ -327,7 +334,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
     }
 
     private ChassisSpeeds speeds() {
-        return swerve.getState().Speeds;
+        return swerveState.Speeds;
     }
 
     public ChassisSpeeds getSpeeds(){
