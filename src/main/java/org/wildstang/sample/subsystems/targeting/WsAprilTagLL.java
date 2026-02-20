@@ -3,9 +3,6 @@ package org.wildstang.sample.subsystems.targeting;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
 import org.wildstang.framework.core.Core;
 import org.wildstang.sample.subsystems.targeting.LimelightHelpers.PoseEstimate;
 
@@ -13,7 +10,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 
-public class WsAprilTagLL implements LoggableInputs {
+public class WsAprilTagLL {
 
 
     public PoseEstimate alliance3D;
@@ -65,13 +62,14 @@ public class WsAprilTagLL implements LoggableInputs {
         ta = LimelightHelpers.getTA(CameraID); // Target area
 
         double oldTimestamp = alliance3D != null ? alliance3D.timestampSeconds : Double.NaN;
-        PoseEstimate blue3D = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(CameraID);
-        PoseEstimate red3D = LimelightHelpers.getBotPoseEstimate_wpiRed_MegaTag2(CameraID);
-        alliance3D = Core.isBlue() ? blue3D : red3D;
+        // PoseEstimate blue3D = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(CameraID);
+        // PoseEstimate red3D = LimelightHelpers.getBotPoseEstimate_wpiRed_MegaTag2(CameraID);
+        alliance3D = Core.isBlue() ? LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(CameraID) :
+            LimelightHelpers.getBotPoseEstimate_wpiRed_MegaTag2(CameraID);
         boolean newEstimate = alliance3D != null ? (alliance3D.timestampSeconds != oldTimestamp) : false;
         
 
-        Logger.processInputs("Vision/Camera/" + CameraID, this);
+        // Logger.processInputs("Vision/Camera/" + CameraID, this);
         if (newEstimate & tv) {
             posePublisher.set(alliance3D.pose);
             return Optional.of(alliance3D);
@@ -109,23 +107,23 @@ public class WsAprilTagLL implements LoggableInputs {
         }
     }
 
-    @Override
-    public void toLog(LogTable table) {
-        //table.put("alliance3D", alliance3D);
-        table.put("tid", tid);
-        table.put("tv", tv);
-        table.put("tx", tx);
-        table.put("ty", ty);
-        table.put("ta", ta);
-    }
+    // @Override
+    // public void toLog(LogTable table) {
+    //     //table.put("alliance3D", alliance3D);
+    //     table.put("tid", tid);
+    //     table.put("tv", tv);
+    //     table.put("tx", tx);
+    //     table.put("ty", ty);
+    //     table.put("ta", ta);
+    // }
 
-    @Override
-    public void fromLog(LogTable table) {
-        //alliance3D = table.get("alliance3D", alliance3D);
-        tid = table.get("tid", tid);
-        tv = table.get("tv", tv);
-        tx = table.get("tx", tx);
-        ty = table.get("ty", ty);
-        ta = table.get("ta", ta);        
-    }
+    // @Override
+    // public void fromLog(LogTable table) {
+    //     //alliance3D = table.get("alliance3D", alliance3D);
+    //     tid = table.get("tid", tid);
+    //     tv = table.get("tv", tv);
+    //     tx = table.get("tx", tx);
+    //     ty = table.get("ty", ty);
+    //     ta = table.get("ta", ta);        
+    // }
 }
