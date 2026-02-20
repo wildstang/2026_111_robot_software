@@ -68,11 +68,17 @@ public class Turret implements Subsystem{
         double actualAngle = 0;
 
         if(turretState == GameStates.FIRING){
+
+             if((desiredTurretAngle <= 240) && (desiredTurretAngle >= 0)){
+                actualAngle = desiredTurretAngle;
+            }else{
+                turretState = GameStates.HOMING;
+            }
             // doing logic to find out which level to go to (example: if you are above 360 and want to go to the lower coterminal angle)
             // if there is a coterminal angle, you decide whether to rotate ccw or cw
             //this will apply to both cases - see if actual angle being in the 360-420
             //range is better, and then do the +360
-            if(desiredTurretAngle <= 90){
+            /*if(desiredTurretAngle <= 90){
                 if((Math.abs(turretMotor.getPosition() - desiredTurretAngle)) 
                     > (Math.abs(turretMotor.getPosition() - (desiredTurretAngle+360)))){
                         actualAngle = desiredTurretAngle + 360;
@@ -82,10 +88,18 @@ public class Turret implements Subsystem{
             
             }else{
                 actualAngle = desiredTurretAngle;
-            }
+            }*/
         }else if(turretState == GameStates.HOMING){
+
+            if((desiredTurretAngle <= 240) && (desiredTurretAngle >= 0)){
+                actualAngle = desiredTurretAngle;
+            }else if(desiredTurretAngle <= 300){
+                actualAngle = 240;
+            }else if(desiredTurretAngle <= 360){
+                actualAngle = 0;
+            }
             //determine which hardstop we are further from and go there (it gives us more wiggle room)
-             if(desiredTurretAngle < 30 && desiredTurretAngle >= 0){
+             /*if(desiredTurretAngle < 30 && desiredTurretAngle >= 0){
                 //always rotate to higher coterminal
                 actualAngle = desiredTurretAngle + 360;
              }else if(desiredTurretAngle < 60){
@@ -97,9 +111,9 @@ public class Turret implements Subsystem{
                 } 
              }else{
                 actualAngle = desiredTurretAngle;
-             }
+             }*/
                 
-    
+     //*/
              
         }
 
