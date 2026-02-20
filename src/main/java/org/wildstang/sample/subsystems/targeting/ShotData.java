@@ -14,6 +14,8 @@ public final class ShotData {
         {1.30,  2.11,  2.71,  3.37,  3.98,  4.56,  5.06,  5.52,  5.84};
     private static double[] tof = new double[]
         {0.9,   0.9,   0.98,  1.08,  1.18,  1.28,  1.38,  1.44,  1.60};
+    private static double[] feedPower = new double[]
+        {0.2, 0.23, 0.26, 0.33, 0.4, 0.46, 0.53, 0.59, 0.63};
 
     public static double getTOF(double shotDistance){
         return lookupTable(shotDistance*mToIn, tof);
@@ -23,6 +25,9 @@ public final class ShotData {
     }
     public static double getHoodAngle(double shotDistance){
         return lookupTable(shotDistance*mToIn, hoodAngle);
+    }
+    public static double getFeedPower(double shotDistance){
+        return lookupTable(shotDistance*mToIn, feedPower);
     }
     private static double lookupTable(double distanceValue, double[] data){
         if (distanceValue < distances[0]) return data[0];

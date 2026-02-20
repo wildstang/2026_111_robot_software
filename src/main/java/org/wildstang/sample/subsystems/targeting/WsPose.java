@@ -3,8 +3,8 @@ package org.wildstang.sample.subsystems.targeting;
 // ton of imports
 import org.wildstang.framework.subsystems.Subsystem;
 import org.wildstang.sample.robot.WsSubsystems;
+import org.wildstang.sample.subsystems.Launcher;
 import org.wildstang.sample.subsystems.Turret;
-import org.wildstang.sample.subsystems.Turret.GameStates;
 import org.wildstang.sample.subsystems.swerve.DriveConstants;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import org.wildstang.sample.subsystems.targeting.LimelightHelpers.PoseEstimate;
@@ -32,6 +32,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class WsPose implements Subsystem {
 
+    private final double inToM = 1.0/39.37;
+
     private WsAprilTagLL left;
     private WsAprilTagLL right;
     // private WsAprilTagLL front;
@@ -47,9 +49,11 @@ public class WsPose implements Subsystem {
     public int currentID = 0;
     public SwerveDrive swerve;
     private Turret turret;
+    private Launcher launcher;
 
     // WPI blue relative (m and CCW rad)
     public Pose2d estimatedPose = new Pose2d();
+    private Translation2d firingTarget = VisionConsts.CENTER_OF_HUB;
 
     StructPublisher<Pose2d> estimatedPosePublisher = NetworkTableInstance.getDefault().getStructTopic("estimatedPose", Pose2d.struct).publish();
 
@@ -63,6 +67,7 @@ public class WsPose implements Subsystem {
     public void initSubsystems() {
         swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
         turret = (Turret) Core.getSubsystemManager().getSubsystem(WsSubsystems.TURRET);
+        launcher = (Launcher) Core.getSubsystemManager().getSubsystem(WsSubsystems.LAUNCHER);
         left = new WsAprilTagLL("limelight-left", swerve::getMegaTag2Yaw);
         right = new WsAprilTagLL("limelight-right", swerve::getMegaTag2Yaw);
         cameras = new WsAprilTagLL[] {left, right};
@@ -96,11 +101,26 @@ public class WsPose implements Subsystem {
             addVisionObservation(bestEstimate, 1/bestStdDev);
         }
 
-        // if (getCoralPose().isPresent()) {
-        //     coralPosePublisher.set(new Pose2d(getCoralPose().get(), new Rotation2d()));
-        // }
+        estimatedPosePublisher.set(estimatedPose);
 
-        estimatedPosePublisher.set(estimatedPose);        
+        if (swerve.speedMagnitude() > 0.1){
+            if (inAllianceZone()){
+                firingTarget = shootOnTheMove(VisionConsts.CENTER_OF_HUB.getX() - estimatedPose.getX(), 
+                    VisionConsts.CENTER_OF_HUB.getY() - estimatedPose.getY());
+            } else {
+                firingTarget = isFeedingLeft() ? 
+                    shootOnTheMove(VisionConsts.highFeedPos.getX() - estimatedPose.getX(),
+                        VisionConsts.highFeedPos.getY() - estimatedPose.getY()) : 
+                    shootOnTheMove(VisionConsts.lowFeedPos.getX() - estimatedPose.getX(), 
+                        VisionConsts.lowFeedPos.getY() - estimatedPose.getY());
+            }
+        } else {
+            if (inAllianceZone()) {
+                firingTarget = VisionConsts.CENTER_OF_HUB;
+            } else {
+                firingTarget = isFeedingLeft() ? VisionConsts.highFeedPos : VisionConsts.lowFeedPos;
+            }
+        }
     }
 
     public double getStdDev(Optional<PoseEstimate> estimate) {
@@ -172,82 +192,28 @@ public class WsPose implements Subsystem {
     }
 
     public double getFlywheelFeedVelocity(){
-        if (estimatedPose.getY() > VisionConsts.halfFieldY){
-        return ShotData.getFlywheelPower(distanceToTarget(new Translation2d(VisionConsts.highFeedPos[0],
-            VisionConsts.highFeedPos[1])));
-        } else return ShotData.getFlywheelPower(distanceToTarget(new Translation2d(VisionConsts.lowFeedPos[0],
-            VisionConsts.lowFeedPos[1])));
+        return ShotData.getFeedPower(distanceToTarget(firingTarget));
     }
     public double getFlywheelShootVelocity(){
-        return ShotData.getFlywheelPower(distanceToTarget(new Translation2d(VisionConsts.CENTER_OF_HUB[0],
-            VisionConsts.CENTER_OF_HUB[1])));
-    }
-    public double getHoodFeedPosition(){
-        if (estimatedPose.getY() > VisionConsts.halfFieldY){
-        return ShotData.getHoodAngle(distanceToTarget(new Translation2d(VisionConsts.highFeedPos[0],
-            VisionConsts.highFeedPos[1])));
-        } else return ShotData.getHoodAngle(distanceToTarget(new Translation2d(VisionConsts.lowFeedPos[0],
-            VisionConsts.lowFeedPos[1])));
+        return ShotData.getFlywheelPower(distanceToTarget(firingTarget));
     }
     public double getHoodShootPosition(){
-        return ShotData.getHoodAngle(distanceToTarget(new Translation2d(VisionConsts.CENTER_OF_HUB[0],
-            VisionConsts.CENTER_OF_HUB[1])));
+        return ShotData.getHoodAngle(distanceToTarget(firingTarget));
     }
     
     // Returns double array with turret angle wanted and also the zone we are in: firing game state for alliance zone and homing for neutral
     //rather than an object[], we can probably return a GameState enum (from turret) in one method,
     //and then a second method that takes in a GameState and returns the double of the angle
     public double angleOfTurret(){
-       
-        double desiredTurretAngle = 0;
-        Pose2d robotPose = estimatedPose;
-        double hubXDistance = VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX();
-        double hubYDistance = VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getY();
-
-        if(robotPose.getX() < VisionConsts.ALLIANCE_ZONE){
-            // in our alliance zone
-            desiredTurretAngle = Math.atan2((hubYDistance),hubXDistance);
-            turret.turretState = Turret.GameStates.FIRING;
-            
-        }else if(robotPose.getX() > VisionConsts.ALLIANCE_ZONE){
-            // in the neutral zone
-            if(robotPose.getY() > VisionConsts.halfFieldY){
-                double feedZoneXDistance = VisionConsts.highFeedPos[0] - estimatedPose.getX();
-                double feedZoneYDistance = VisionConsts.highFeedPos[1] - estimatedPose.getY();
-
-                desiredTurretAngle = Math.atan2(feedZoneYDistance,feedZoneXDistance);
-                turret.turretState = Turret.GameStates.HOMING; 
-            }else if(robotPose.getY() < VisionConsts.halfFieldY){
-                double feedZoneXDistance = VisionConsts.lowFeedPos[0] - estimatedPose.getX();
-                double feedZoneYDistance = VisionConsts.lowFeedPos[1] - estimatedPose.getY();
-
-                desiredTurretAngle = Math.atan2(feedZoneYDistance,feedZoneXDistance);
-                turret.turretState = Turret.GameStates.HOMING; 
-
-            }             
-        }
-        return Math.toDegrees(desiredTurretAngle);
+        return Math.atan2(firingTarget.getY()-estimatedPose.getY(), firingTarget.getX() - estimatedPose.getX());
     }
 
     public double fromFieldToRobotAngle(double fieldAngle){
         return (fieldAngle - swerve.getGyroAngle() + VisionConsts.turretOffset+1080)%360;
     }
 
-    public double shootOnTheMove(){
+    public Translation2d shootOnTheMove(double dix, double diy){
         //shoot on da move
-        double dix = VisionConsts.CENTER_OF_HUB[0] - estimatedPose.getX();
-        double diy = VisionConsts.CENTER_OF_HUB[1] - estimatedPose.getY();
-        //use feed positions instead of the hub if we are feeding
-        if (estimatedPose.getX() > VisionConsts.ALLIANCE_ZONE){
-            turret.turretState = Turret.GameStates.HOMING;
-            if (estimatedPose.getY() < VisionConsts.halfFieldY){
-                dix = VisionConsts.lowFeedPos[0] - estimatedPose.getX();
-                diy = VisionConsts.lowFeedPos[1] - estimatedPose.getY();
-            } else {
-                dix = VisionConsts.highFeedPos[0] - estimatedPose.getX();
-                diy = VisionConsts.highFeedPos[1] - estimatedPose.getY();
-            }
-        } else turret.turretState = Turret.GameStates.FIRING;
         double dih = Math.hypot(dix, diy);
         double robotVelx = swerve.getSpeeds().vxMetersPerSecond;
         double robotVely = swerve.getSpeeds().vyMetersPerSecond;
@@ -268,34 +234,45 @@ public class WsPose implements Subsystem {
             dih = dnew;
             dnewTof = ShotData.getTOF(dnew);
         }
-        return Math.toDegrees(Math.atan2(dnewy,dnewx));
+        return new Translation2d(dnewx+estimatedPose.getX(), dnewy+estimatedPose.getY());
     }
 
-      public double distanceToTarget(Translation2d target) {
+    public double distanceToTarget(Translation2d target) {
         double offsetX = target.getX() - estimatedPose.getX();
         double offsetY = target.getY() - estimatedPose.getY();
         return (Math.sqrt(offsetX*offsetX + offsetY*offsetY));
     }
 
     public boolean goodToFire(){
-        if(estimatedPose.getX() < VisionConsts.ALLIANCE_ZONE){
+        if(inAllianceZone()){
             //in alliance zone
             // if(estimatedPose.getX() <= 158.6 && estimatedPose.getX() >= 118.6 && estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
             //     //right up against the hub
             //     return false;
             // }
-            if(estimatedPose.getX() < 46 && estimatedPose.getY() >= 120 && estimatedPose.getY() <= 160){
+            if(estimatedPose.getX() < 46*inToM && estimatedPose.getY() >= 120*inToM && estimatedPose.getY() <= 160*inToM){
                 //behind climbing area
                 return false;
             }
 
-        }
-        if(estimatedPose.getX() > VisionConsts.ALLIANCE_ZONE){
-             if(estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
+        } else {
+             if(estimatedPose.getY() <= 170*inToM && estimatedPose.getY() >= 130*inToM){
                 //behind the hub
                 return false;
             }                
         }
         return true;
+    }
+    public boolean inAllianceZone(){
+        return estimatedPose.getX() < VisionConsts.ALLIANCE_ZONE;
+    }
+    public boolean canFeedLeft(){
+        return !inAllianceZone() && estimatedPose.getY() > 170*inToM;
+    }
+    public boolean canFeedRight(){
+        return !inAllianceZone() && estimatedPose.getY() < 130*inToM;
+    }
+    public boolean isFeedingLeft(){
+        return estimatedPose.getY() > VisionConsts.halfFieldY;
     }
 }

@@ -32,8 +32,8 @@ public class Ballpath implements Subsystem{
     public void inputUpdate(Input source) {
         if(operatorA.getValue()){
             state = GameState.REVERSE;
-        }else if(driverLT.getValue() > 0.5 || operatorLS.getValue()
-        || operatorLT.getValue() > 0.5 || operatorRS.getValue()){
+        }else if(Math.abs(driverLT.getValue()) > 0.5 || operatorLS.getValue()
+        || Math.abs(operatorLT.getValue()) > 0.5 || operatorRS.getValue()){
             if (state != GameState.FIRING) state = GameState.READYING;
         }else{
             state = GameState.STOP;
@@ -75,13 +75,13 @@ public class Ballpath implements Subsystem{
     @Override
     public void update() {
         if (state == GameState.READYING){
-            if (turret.goodToFire() && launcher.goodToFire) {
+            if (turret.goodToFire() && launcher.goodToFire() && pose.goodToFire()) {
                 ballpathMotor.setSpeed(1.0);
                 state = GameState.FIRING;
             }
             else ballpathMotor.setSpeed(0);
         } else if (state == GameState.FIRING){
-            if (turret.goodToFire()) ballpathMotor.setSpeed(1.0);
+            if (turret.goodToFire() && pose.goodToFire()) ballpathMotor.setSpeed(1.0);
             else ballpathMotor.setSpeed(0.0);
         } else if (state == GameState.REVERSE){
             ballpathMotor.setSpeed(-0.2);

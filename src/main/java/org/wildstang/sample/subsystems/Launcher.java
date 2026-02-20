@@ -23,32 +23,25 @@ public class Launcher implements Subsystem{
     private WsJoystickButton operatorLeftBumper, operatorRightBumper;
 
 
-    private enum GameStates {SHOOT, FEED, STOW};
+    private enum GameStates {SHOOT, FEED, FEED_LEFT, FEED_RIGHT, STOW};
     private GameStates currentState = GameStates.STOW;
 
     public boolean inFeedingZone;
 
     
     /* Flywheel Stuff */
-    private double flywheelVelocity;
-    private double desiredFlywheelShootVel;
-    private double desiredFlywheelFeedVel;
-
-    private double flywheelShootVelTolerance;
-    private double flywheelFeedVelTolerance;
+    private double flywheelVel = 0.0;
+    private double flywheelActual = 0.0;
+    private final double flywheelTolerance = 3.0;
 
 
     /* Hood Stuff */
-    private double hoodPosition;
-    private double desiredHoodShootPos;
-    private double desiredHoodFeedPos;
-
-    private double hoodShootPositionTolerance;
-    private double hoodFeedPositionTolerance;
-
+    private double hoodPos = 0.0;
+    private double hoodActual = 0.0;
+    private final double hoodTolerance = 0.2;
+    private final double HOODMAX = 6.0;
+    private final double HOODMIN = 0.0;
     double hoodStart = 0;
-
-    public boolean goodToFire;
 
     @Override
     public void init() {
@@ -76,10 +69,6 @@ public class Launcher implements Subsystem{
         operatorRightBumper = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_RIGHT_SHOULDER);
         operatorRightBumper.addInputListener(this);
 
-        flywheelShootVelTolerance = 0;
-        hoodShootPositionTolerance = 0;
-        flywheelFeedVelTolerance = 0;
-        hoodFeedPositionTolerance = 0;
         hoodStart = hoodMotor.getPosition();
 
     }
@@ -87,16 +76,15 @@ public class Launcher implements Subsystem{
     @Override
     public void inputUpdate(Input source) {
        
-        if(((Math.abs(driverLeftTrigger.getValue()) > 0.5))  
-                || (Math.abs(operatorRightTrigger.getValue()) > 0.5)){
+        if(Math.abs(driverLeftTrigger.getValue()) > 0.5){
             currentState = GameStates.SHOOT;
-        }
-        else if(operatorLeftBumper.getValue() 
-                || (Math.abs(operatorLeftTrigger.getValue()) > 0.5) 
-                    || operatorRightBumper.getValue()){
+        } else if(operatorLeftBumper.getValue()){
+            currentState = GameStates.FEED_LEFT;
+        } else if (Math.abs(operatorLeftTrigger.getValue()) > 0.5){
             currentState = GameStates.FEED;
-        }
-        else{
+        } else if (operatorRightBumper.getValue()){
+            currentState = GameStates.FEED_RIGHT;
+        } else{
             currentState = GameStates.STOW;
         }
 
@@ -108,87 +96,52 @@ public class Launcher implements Subsystem{
         switch (currentState){
             case SHOOT:
               
-                desiredFlywheelShootVel = pose.getFlywheelShootVelocity();
-                desiredHoodShootPos = pose.getHoodShootPosition();
-
-                flywheelMotor.setVelocity(desiredFlywheelShootVel);
-                setHood(desiredHoodShootPos);
-
-                goodToFire = isGoodToFire(flywheelVelocity, hoodPosition);
-                            
-
+                flywheelVel = pose.inAllianceZone() ? pose.getFlywheelShootVelocity() : 0.0;
+                hoodPos = pose.getHoodShootPosition();
                 break;
 
             case FEED:
 
-                desiredFlywheelFeedVel = pose.getFlywheelFeedVelocity();
-                desiredHoodFeedPos = pose.getHoodFeedPosition();
+                flywheelVel = pose.inAllianceZone() ? 0.0 :pose.getFlywheelFeedVelocity();
+                hoodPos = HOODMAX;
+                break;
 
-                flywheelMotor.setVelocity(desiredFlywheelFeedVel);
-                setHood(desiredHoodFeedPos);
+            case FEED_LEFT:
 
-                goodToFire = isGoodToFire(flywheelVelocity, hoodPosition);
+                flywheelVel = pose.canFeedLeft() ? pose.getFlywheelFeedVelocity(): 0.0;
+                hoodPos = HOODMAX;
+                break;
 
+            case FEED_RIGHT: 
+
+                flywheelVel = pose.canFeedRight() ? pose.getFlywheelFeedVelocity(): 0.0;
+                hoodPos = HOODMAX;
                 break;
 
             case STOW:
-                
-                goodToFire = false;
-                flywheelMotor.setSpeed(0.0);
-                setHood(0.0);
-
+                flywheelVel = 0.0;
+                if (pose.inAllianceZone()) hoodPos = pose.getHoodShootPosition();
+                else hoodPos = HOODMAX;
                 break;
-
         }
+        flywheelMotor.setVelocity(flywheelVel);
+        setHood(hoodPos);
+        flywheelActual = flywheelMotor.getVelocity();
+        hoodActual = hoodMotor.getPosition() - hoodStart;
         SmartDashboard.putString("Launcher state", currentState.toString());
-        SmartDashboard.putNumber("Launcher velocity", flywheelMotor.getVelocity());
-        SmartDashboard.putNumber("Launcher target velocity", currentState == GameStates.SHOOT ? desiredFlywheelShootVel
-            : currentState == GameStates.FEED ? desiredFlywheelFeedVel : 0.0);
-        SmartDashboard.putNumber("Launcher hood pos", hoodMotor.getPosition()-hoodStart);
-        SmartDashboard.putNumber("Launcher hood target", currentState == GameStates.SHOOT ? desiredHoodShootPos
-            : currentState == GameStates.FEED ? desiredHoodFeedPos : 0.0);
-        SmartDashboard.putBoolean("Launcher ready to fire", goodToFire);
+        SmartDashboard.putNumber("Launcher velocity", flywheelActual);
+        SmartDashboard.putNumber("Launcher target velocity", flywheelVel);
+        SmartDashboard.putNumber("Launcher hood pos", hoodActual);
+        SmartDashboard.putNumber("Launcher hood target", hoodPos);
+        SmartDashboard.putBoolean("Launcher ready to fire", goodToFire());
     }
 
-    private boolean isGoodToFire(double flywheelVel, double hoodPos){
-        boolean flywheelGood = false;
-        boolean hoodPosGood = false;
+    public boolean goodToFire(){
 
-        if(currentState.equals(GameStates.SHOOT)){
-            double[] actualFlywheelVel = {flywheelVel - flywheelShootVelTolerance, flywheelVel + flywheelShootVelTolerance};
-            double[] actualHoodPosition = {hoodPos - hoodShootPositionTolerance, hoodPos + hoodShootPositionTolerance};
-
-            
-            if(flywheelVel >= actualFlywheelVel[0] && flywheelVel <= actualFlywheelVel[1]){
-                flywheelGood = true;
-            }else{
-                flywheelGood = false;
-            }
-            if(hoodPos >= actualHoodPosition[0] && hoodPos <= actualHoodPosition[1]){
-                hoodPosGood = true;
-            }else{
-                hoodPosGood = false;
-            }
-
-        
-        }else if(currentState.equals(GameStates.FEED)){
-            double[] actualFlywheelVel = {flywheelVel - flywheelFeedVelTolerance, flywheelVel + flywheelFeedVelTolerance};
-            double[] actualHoodPosition = {hoodPos - hoodFeedPositionTolerance, hoodPos + hoodFeedPositionTolerance};
-
-            
-            if(flywheelVel >= actualFlywheelVel[0] && flywheelVel <= actualFlywheelVel[1]){
-                flywheelGood = true;
-            }else{
-                flywheelGood = false;
-            }
-            if(hoodPos >= actualHoodPosition[0] && hoodPos <= actualHoodPosition[1]){
-                hoodPosGood = true;
-            }else{
-                hoodPosGood = false;
-            }
-        }
-
-        return flywheelGood && hoodPosGood;
+        if (flywheelVel == 0.0) return false;
+        if (Math.abs(hoodPos - hoodActual) > hoodTolerance) return false;
+        if (Math.abs(flywheelVel - flywheelActual) > flywheelTolerance) return false;
+        return true;
         
     }
 
@@ -210,9 +163,15 @@ public class Launcher implements Subsystem{
         return "Launcher";
     }
     private void setHood(double hoodPos){
-        if (hoodPos > 6.0) hoodMotor.setPosition(hoodStart+6.0);
-        else if (hoodPos < 0.0) hoodMotor.setPosition(hoodStart);
+        if (hoodPos > HOODMAX) hoodMotor.setPosition(hoodStart+HOODMAX);
+        else if (hoodPos < HOODMIN) hoodMotor.setPosition(hoodStart+HOODMIN);
         else hoodMotor.setPosition(hoodPos+hoodStart);
+    }
+    public boolean isActive(){
+        return !(currentState == GameStates.STOW);
+    }
+    public boolean isScoring(){
+        return currentState == GameStates.SHOOT;
     }
     
 }

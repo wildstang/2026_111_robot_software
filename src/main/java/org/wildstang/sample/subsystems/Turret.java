@@ -16,14 +16,13 @@ public class Turret implements Subsystem{
     WsPose pose;
     
     //I think we only need one homing state
-    public static enum GameStates {FIRING, HOMING};
-    public GameStates turretState = GameStates.HOMING;
-    public double desiredTurretAngle;
+    public double desiredTurretAngle, actualAngle = 0;
     public SwerveDrive swerve;
 
     private final double turretStartOffset = 120 * 43.5/360;
 
     private WsTalon turretMotor;
+    private boolean hadWrapped = false;
 
     double turretStart = 0;
 
@@ -46,18 +45,13 @@ public class Turret implements Subsystem{
 
     @Override
     public void update() {
-        if(swerve.speedMagnitude() < 0.05){
-            //returns staic angle of turret, robot centric, wrapped [0,360)
-            desiredTurretAngle = pose.fromFieldToRobotAngle(pose.angleOfTurret());
-        }
-        else{
-            //returns sotm angle of turret, robot centric, wrapped [0, 360)
-            desiredTurretAngle = pose.fromFieldToRobotAngle(pose.shootOnTheMove());
-        }
-        turretMotor.setPosition(rotateTurret()*43.5/360+turretStart);
-        SmartDashboard.putString("Turret State", turretState.name());
+        //returns staic angle of turret, robot centric, wrapped [0,360)
+        desiredTurretAngle = pose.fromFieldToRobotAngle(pose.angleOfTurret());
+        actualAngle = rotateTurret();
+        
+        turretMotor.setPosition(actualAngle*43.5/360+turretStart);
         SmartDashboard.putNumber("Turret position", turretMotor.getPosition()-turretStart);
-        SmartDashboard.putNumber("Turret target", rotateTurret()*43.5/360+turretStart);
+        SmartDashboard.putNumber("Turret target", actualAngle*43.5/360+turretStart);
         SmartDashboard.putNumber("Turret robot centric target", desiredTurretAngle+turretStartOffset);
         SmartDashboard.putBoolean("Turret good to fire", goodToFire());
     }
@@ -65,7 +59,6 @@ public class Turret implements Subsystem{
     public double rotateTurret(){
         //note that desiredAngle will probably only be 0-360
         //this seems to assume it'll be up to 420
-        double actualAngle = 0;
 
         // if(turretState == GameStates.FIRING){
 
@@ -92,11 +85,13 @@ public class Turret implements Subsystem{
         // }else if(turretState == GameStates.HOMING){
 
             if((desiredTurretAngle <= 240) && (desiredTurretAngle >= 0)){
-                actualAngle = desiredTurretAngle;
-            }else if(desiredTurretAngle <= 300){
-                actualAngle = 240;
-            }else if(desiredTurretAngle <= 360){
-                actualAngle = 0;
+                return desiredTurretAngle;
+            }else if(desiredTurretAngle <= 270){
+                hadWrapped = true;
+                return 240;
+            }else if(desiredTurretAngle >= 330){
+                hadWrapped = true;
+                return 0;
             }
             //determine which hardstop we are further from and go there (it gives us more wiggle room)
              /*if(desiredTurretAngle < 30 && desiredTurretAngle >= 0){
@@ -116,15 +111,24 @@ public class Turret implements Subsystem{
      //*/
              
         // }
-
+            hadWrapped = true;
         return actualAngle;
     }
 
 
     public boolean goodToFire(){
+        if (desiredTurretAngle > 240) return false;
         //good
         double wiggle = Math.abs(rotateTurret()*43.5/360+turretStart - turretMotor.getPosition());
         return wiggle < 1.0;
+    }
+    public boolean keepFiring(){
+        if (!hadWrapped) return true;
+        if (Math.abs(rotateTurret()*43.5/360+turretStart - turretMotor.getPosition()) < 1.0){
+            hadWrapped = false;
+            return true;
+        }
+        return false;
     }
 
     @Override
