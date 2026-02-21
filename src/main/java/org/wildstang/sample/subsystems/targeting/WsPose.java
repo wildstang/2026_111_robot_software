@@ -252,10 +252,10 @@ public class WsPose implements Subsystem {
             //     //right up against the hub
             //     return false;
             // }
-            if(estimatedPose.getX() < 46*inToM && estimatedPose.getY() >= 120*inToM && estimatedPose.getY() <= 160*inToM){
-                //behind climbing area
-                return false;
-            }
+            // if(estimatedPose.getX() < 46*inToM && estimatedPose.getY() >= 120*inToM && estimatedPose.getY() <= 160*inToM){
+            //     //behind climbing area
+            //     return false;
+            // }
 
         } else {
              if(estimatedPose.getY() <= 170*inToM && estimatedPose.getY() >= 130*inToM){

@@ -47,11 +47,16 @@ public class Intake implements Subsystem{
         
        if(operatorX.getValue()){
             deploy = DeployState.IN;
-        }  else if(Math.abs(rightTrigger.getValue()) > 0 || rightShoulder.getValue()){
-            deploy = DeployState.OUT;
-        } else {
+       } else if (Math.abs(leftTrigger.getValue()) > 0 || Math.abs(operatorLeftTrigger.getValue()) > 0){
             deploy = DeployState.STOWED;
-        }
+       } else {
+            deploy = DeployState.OUT;
+       }
+        // }  else if(Math.abs(rightTrigger.getValue()) > 0 || rightShoulder.getValue()){
+        //     deploy = DeployState.OUT;
+        // } else {
+        //     deploy = DeployState.STOWED;
+        // }
 
     }
 
@@ -92,10 +97,10 @@ public class Intake implements Subsystem{
     @Override
     public void update() {
         if(direction == IntakeState.INTAKING){
-            intakeMotor.setSpeed(-1.0);
+            intakeMotor.setSpeed(-0.75);
         }
         else if (direction == IntakeState.REVERSE){
-            intakeMotor.setSpeed(1.0);
+            intakeMotor.setSpeed(0.5);
         }
         else if (direction == IntakeState.SLOW){
             intakeMotor.setSpeed(-0.15);
@@ -105,20 +110,20 @@ public class Intake implements Subsystem{
         }
         
         if(deploy == DeployState.IN){
-            deployMotor.setPosition(deployStart-2.45);
+            deployMotor.setPosition(deployStart);
         }
         if(deploy == DeployState.OUT){
-            if (Math.abs(deployMotor.getPosition()-deployStart)>0.05) deployMotor.setSpeed(0.1);
-            else deployMotor.setSpeed(0);
-            // else deployMotor.setPosition(deployStart, 0);
+            // if (Math.abs(deployMotor.getPosition()-(deployStart+2.45))>0.05) deployMotor.setSpeed(0.1);
+            // else deployMotor.setSpeed(0);
+            deployMotor.setPosition(deployStart+2.45, 0);
         }
         if(deploy == DeployState.STOWED){
-            if (Math.abs(deployMotor.getPosition()-deployStart)>0.05) deployMotor.setSpeed(0.1);
-            else deployMotor.setSpeed(0);
-            // else deployMotor.setPosition(deployStart, 0);
+            // if (Math.abs(deployMotor.getPosition()-(deployStart+2.45))>0.05) deployMotor.setSpeed(0.1);
+            // else deployMotor.setSpeed(0);
+            deployMotor.setPosition(deployStart+0.85, 0);
         }
         SmartDashboard.putNumber("Intake Deploy position", deployMotor.getPosition());
-        SmartDashboard.putNumber("Intake target", deploy != DeployState.IN ? deployStart : deployStart-2.45);
+        SmartDashboard.putNumber("Intake target", deploy != DeployState.IN ? deployStart+2.45 : deployStart);
         SmartDashboard.putString("Intake state", deploy.toString());
     }
 

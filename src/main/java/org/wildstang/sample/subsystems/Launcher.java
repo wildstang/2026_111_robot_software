@@ -46,8 +46,8 @@ public class Launcher implements Subsystem{
     @Override
     public void init() {
         flywheelMotor = (WsTalon) WsOutputs.FLYWHEEL.get();
-        flywheelMotor.enableFOC();
-        flywheelMotor.initClosedLoop(0.05,0.0,0.0, 0.0, 0.1);
+        // flywheelMotor.enableFOC();
+        flywheelMotor.initClosedLoop(0.05,0.0,0.0, 0.0, 0.01);
         flywheelMotor.setCurrentLimit(120, 70);
 
         hoodMotor = (WsTalon) WsOutputs.HOOD.get();

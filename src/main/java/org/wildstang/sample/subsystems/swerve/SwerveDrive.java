@@ -106,9 +106,9 @@ public class SwerveDrive extends SwerveDriveTemplate {
         
         //reset gyro
         if (source == select && select.getValue()) {
-            while (swerveGyro > 0.1 || swerveGyro < -0.1){
+            // while (swerveGyro > 0.1 || swerveGyro < -0.1){
                 swerve.resetRotation(new Rotation2d(0));
-            }
+            // }
             swerveSignal.setRotLocked(0);
         }
 
@@ -141,7 +141,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
         }
 
         //get rotational joystick
-        double rotSpeed = rightStickHorizontal.getValue()*Math.abs(rightStickHorizontal.getValue());
+        double rotSpeed = -rightStickHorizontal.getValue()*Math.abs(rightStickHorizontal.getValue());
         rotSpeed = swerveHelper.scaleDeadband(rotSpeed, DriveConstants.DEADBAND);
         //if the rotational joystick is being used, the robot should not be auto tracking heading
         if (rotSpeed != 0 || swerveSignal.currentState() == controlState.MANUAL) {
@@ -214,7 +214,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
         // Logger.processInputs("Swerve", this);
         swerveState = swerve.getState();
         swervePose = swerveState.Pose;
-        swerveGyro = swervePose.getRotation().getDegrees();
+        swerveGyro = (swervePose.getRotation().getDegrees()+360.0)%360;
         pose.addOdometryObservation(swervePose);
 
         if (driveState == DriveType.TELEOP) {
