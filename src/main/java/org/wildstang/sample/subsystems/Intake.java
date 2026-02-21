@@ -25,7 +25,7 @@ public class Intake implements Subsystem{
 
     private WsTalon intakeMotor, deployMotor;
 
-    public enum DeployState {IN, OUT, STOWED};
+    public enum DeployState {IN, OUT, INTAKING, STOWED};
     public enum IntakeState {INTAKING, NEUTRAL, REVERSE, SLOW};
     private DeployState deploy = DeployState.OUT;
     private IntakeState direction = IntakeState.NEUTRAL;
@@ -47,6 +47,8 @@ public class Intake implements Subsystem{
         
        if(operatorX.getValue()){
             deploy = DeployState.IN;
+       } else if (Math.abs(rightTrigger.getValue()) > 0 || rightShoulder.getValue()){
+            deploy = DeployState.INTAKING;
        } else if (Math.abs(leftTrigger.getValue()) > 0 || Math.abs(operatorLeftTrigger.getValue()) > 0){
             deploy = DeployState.STOWED;
        } else {
@@ -69,7 +71,7 @@ public class Intake implements Subsystem{
         // deployMotor.addClosedLoop(2.0, 0, 0);
         intakeMotor.enableFOC();
         intakeMotor.setCurrentLimit(70,70);
-        deployMotor.setCurrentLimit(70,70);
+        deployMotor.setCurrentLimit(50,50);
         deployStart = deployMotor.getPosition();
 
         rightTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.DRIVER_RIGHT_TRIGGER);
@@ -103,7 +105,7 @@ public class Intake implements Subsystem{
             intakeMotor.setSpeed(0.5);
         }
         else if (direction == IntakeState.SLOW){
-            intakeMotor.setSpeed(-0.15);
+            intakeMotor.setSpeed(-0.35);
         }
         else{
            intakeMotor.setSpeed(0.0);
@@ -121,6 +123,10 @@ public class Intake implements Subsystem{
             // if (Math.abs(deployMotor.getPosition()-(deployStart+2.45))>0.05) deployMotor.setSpeed(0.1);
             // else deployMotor.setSpeed(0);
             deployMotor.setPosition(deployStart+0.85, 0);
+        }
+        if (deploy == DeployState.INTAKING){
+            if (deployMotor.getPosition() < deployStart+2.4) deployMotor.setSpeed(0.5);
+            else deployMotor.setSpeed(0.1);
         }
         SmartDashboard.putNumber("Intake Deploy position", deployMotor.getPosition());
         SmartDashboard.putNumber("Intake target", deploy != DeployState.IN ? deployStart+2.45 : deployStart);

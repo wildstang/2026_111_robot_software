@@ -56,6 +56,7 @@ public class WsPose implements Subsystem {
     private Translation2d firingTarget = VisionConsts.CENTER_OF_HUB;
 
     StructPublisher<Pose2d> estimatedPosePublisher = NetworkTableInstance.getDefault().getStructTopic("estimatedPose", Pose2d.struct).publish();
+    StructPublisher<Pose2d> firingPosePublisher = NetworkTableInstance.getDefault().getStructTopic("firing pose", Pose2d.struct).publish();
 
     private final TimeInterpolatableBuffer<Pose2d> poseBuffer = TimeInterpolatableBuffer.createBuffer(poseBufferSizeSec);
 
@@ -121,6 +122,7 @@ public class WsPose implements Subsystem {
                 firingTarget = isFeedingLeft() ? VisionConsts.highFeedPos : VisionConsts.lowFeedPos;
             }
         }
+        firingPosePublisher.set(new Pose2d(firingTarget, new Rotation2d()));
         SmartDashboard.putNumber("Pose firing X", firingTarget.getX());
         SmartDashboard.putNumber("Pose firing Y", firingTarget.getY());
     }
@@ -217,8 +219,13 @@ public class WsPose implements Subsystem {
     public Translation2d shootOnTheMove(double dix, double diy){
         //shoot on da move
         double dih = Math.hypot(dix, diy);
-        double robotVelx = swerve.getSpeeds().vxMetersPerSecond;
-        double robotVely = swerve.getSpeeds().vyMetersPerSecond;
+        double robotx = swerve.getSpeeds().vxMetersPerSecond;
+        double roboty = swerve.getSpeeds().vyMetersPerSecond;
+
+        double robotVelx = robotx*Math.cos(Math.toRadians(swerve.getGyroAngle()))
+            + roboty*Math.cos(Math.toRadians(90 + swerve.getGyroAngle()));
+        double robotVely = robotx*Math.sin(Math.toRadians(swerve.getGyroAngle()))
+            + roboty*Math.sin(Math.toRadians(90 + swerve.getGyroAngle()));
         
         double dnewx = dix - robotVelx * ShotData.getTOF(dih);
         double dnewy = diy - robotVely * ShotData.getTOF(dih);

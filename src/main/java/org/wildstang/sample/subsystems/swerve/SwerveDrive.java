@@ -237,6 +237,12 @@ public class SwerveDrive extends SwerveDriveTemplate {
         SmartDashboard.putString("Drive Request Type", swerveSignal.currentState().toString());
         SmartDashboard.putNumber("Rotation target", swerveSignal.getRotTarget());
         SmartDashboard.putNumber("@ speed", speedMagnitude());
+        double robotVelx = speeds().vxMetersPerSecond*Math.cos(Math.toRadians(getGyroAngle()))
+            + speeds().vyMetersPerSecond*Math.cos(Math.toRadians(90 + getGyroAngle()));
+        double robotVely = speeds().vxMetersPerSecond*Math.sin(Math.toRadians(getGyroAngle()))
+            + speeds().vyMetersPerSecond*Math.sin(Math.toRadians(90 + getGyroAngle()));
+        SmartDashboard.putNumber("SOTM speed x", robotVelx);
+        SmartDashboard.putNumber("SOTM speed y", robotVely);
         if (targetPose != null){
             targetPosePublisher.set(targetPose);
         }
