@@ -92,7 +92,6 @@ public class WsPose implements Subsystem {
 
     @Override
     public void update() {
-        object.update();
         double odFOM = odometryFOM();
         SmartDashboard.putNumber("Odometry FOM", odFOM);
         double bestStdDev = Double.MAX_VALUE;
@@ -180,7 +179,7 @@ public class WsPose implements Subsystem {
          SmartDashboard.putNumber("Best Standard Deviation ", bestStdDev);
         if(bestEstimate != null){
             SmartDashboard.putNumberArray("Best Estimate", new double[]{bestEstimate.pose.getX(), bestEstimate.pose.getY()});
-            bestEstimatePosePublisher.set(bestEstimate.getPose2d());
+            bestEstimatePosePublisher.set(bestEstimate.pose);
         }else if (estimatedPose != null){
             SmartDashboard.putNumberArray("Estimated Pose", new double[]{estimatedPose.getX(), estimatedPose.getY()});
         }
