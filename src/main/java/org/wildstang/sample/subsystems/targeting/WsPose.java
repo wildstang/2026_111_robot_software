@@ -38,7 +38,11 @@ public class WsPose implements Subsystem {
     private WsAprilTagLL right;
     // private WsAprilTagLL front;
 
-    private WsAprilTagLL[] cameras; 
+    private double distanceDriven = 0;
+    private double rotationSpeed = 0;
+
+    private WsAprilTagLL[] cameras;
+
 
     // Object detection camera
     // public WsGamePieceLL object = new WsGamePieceLL("limelight-object");
@@ -53,11 +57,16 @@ public class WsPose implements Subsystem {
 
     // WPI blue relative (m and CCW rad)
     public Pose2d estimatedPose = new Pose2d();
+    public Pose2d odometryPose = new Pose2d();
+
     private Translation2d firingTarget = VisionConsts.CENTER_OF_HUB;
 
     StructPublisher<Pose2d> estimatedPosePublisher = NetworkTableInstance.getDefault().getStructTopic("estimatedPose", Pose2d.struct).publish();
+    StructPublisher<Pose2d> odometryPosePublisher = NetworkTableInstance.getDefault().getStructTopic("odometryPose", Pose2d.struct).publish();
+    StructPublisher<Pose2d> bestEstimatePosePublisher = NetworkTableInstance.getDefault().getStructTopic("bestEstimatePose", Pose2d.struct).publish();
 
     private final TimeInterpolatableBuffer<Pose2d> poseBuffer = TimeInterpolatableBuffer.createBuffer(poseBufferSizeSec);
+    private double oldOdometryUpdateTime = 0.0;
 
     @Override
     public void inputUpdate(Input source) {
@@ -83,26 +92,71 @@ public class WsPose implements Subsystem {
 
     @Override
     public void update() {
-        int bestIndex = -1;
+        object.update();
+        double odFOM = odometryFOM();
+        SmartDashboard.putNumber("Odometry FOM", odFOM);
         double bestStdDev = Double.MAX_VALUE;
         PoseEstimate bestEstimate = null;
-        for (int i = 0; i < cameras.length; i++) {
-            Optional<PoseEstimate> estimate = cameras[i].update();
-            if (estimate.isPresent() && getStdDev(estimate) < bestStdDev) {
-                bestIndex = i;
-                bestEstimate = estimate.get();
-                bestStdDev = getStdDev(estimate);
-            }   
-        }
 
-        // If we found a valid estimate
-        if (bestEstimate != null) {
-            currentID = cameras[bestIndex].tid;
-            addVisionObservation(bestEstimate, 1/bestStdDev);
+        WsAprilTagLL bestCamera = getBestCamera();
+
+        rotationSpeed = Math.abs(swerve.speeds().omegaRadiansPerSecond);
+        SmartDashboard.putNumber("Rotation Speed", rotationSpeed);
+        
+        if(bestCamera == null){
+            estimatedPose = odometryPose;
+                SmartDashboard.putString("Vision/BestCamera", "none");
+                odometryPosePublisher.set(odometryPose);
+                estimatedPosePublisher.set(estimatedPose);
+                return;
+            }
+            SmartDashboard.putString("Vision/BestCamera", bestCamera.CameraID);
+
+            bestEstimate = bestCamera.update().orElse(null);
+            
+            
+
+        if(bestEstimate == null){
+
+            estimatedPose = odometryPose;
+            SmartDashboard.putString("Vision/BestCamera", bestCamera.CameraID);
+            SmartDashboard.putString("Has Reset", "False");
+        }else{
+            bestStdDev = getStdDev(Optional.of(bestEstimate));
+            double camFOM = cameraFOM(bestCamera);
+           
+
+            SmartDashboard.putNumber("Camera FOM", camFOM);
+            SmartDashboard.putNumber("Best StdDev", bestStdDev);
+
+            if(camFOM > odFOM){
+          
+                estimatedPose = odometryPose;
+                SmartDashboard.putString("Has Reset", "False");
+            
+            }else if(camFOM < FOMConstants.USE_CAM_WHEN_THIS_CONSTANT && camFOM > odFOM){
+                /*for (int i = 0; i < cameras.length; i++) {
+                    Optional<PoseEstimate> estimate = cameras[i].update();
+                    if (estimate.isPresent() && getStdDev(estimate) < bestStdDev) {
+                        bestEstimate = estimate.get();
+                        bestStdDev = getStdDev(estimate);
+                    }   
+                }*/
+                addVisionObservation(bestEstimate, 1/bestStdDev);
+                odometryPose = estimatedPose;
+                
+            }else if (camFOM < odFOM){
+                addVisionObservation(bestEstimate, 1/bestStdDev);
+                odometryPose = estimatedPose;
+
+                distanceDriven = 0;
+                SmartDashboard.putString("Has Reset", "True");
+            }
         }
 
         estimatedPosePublisher.set(estimatedPose);
-
+        odometryPosePublisher.set(odometryPose);
+        
         if (swerve.speedMagnitude() > 0.1){
             if (inAllianceZone()){
                 firingTarget = shootOnTheMove(VisionConsts.CENTER_OF_HUB.getX() - estimatedPose.getX(), 
@@ -123,12 +177,105 @@ public class WsPose implements Subsystem {
         }
         SmartDashboard.putNumber("Pose firing X", firingTarget.getX());
         SmartDashboard.putNumber("Pose firing Y", firingTarget.getY());
+         SmartDashboard.putNumber("Best Standard Deviation ", bestStdDev);
+        if(bestEstimate != null){
+            SmartDashboard.putNumberArray("Best Estimate", new double[]{bestEstimate.pose.getX(), bestEstimate.pose.getY()});
+            bestEstimatePosePublisher.set(bestEstimate.getPose2d());
+        }else if (estimatedPose != null){
+            SmartDashboard.putNumberArray("Estimated Pose", new double[]{estimatedPose.getX(), estimatedPose.getY()});
+        }
     }
 
-    public double getStdDev(Optional<PoseEstimate> estimate) {
-        return estimate.isPresent() && estimate.get().rawFiducials.length > 0 ? 
-            Math.pow(Arrays.stream(estimate.get().rawFiducials).mapToDouble(fiducial -> fiducial.distToCamera).min().getAsDouble(),2) / estimate.get().tagCount 
-            : Double.MAX_VALUE;
+    private double cameraFOM(WsAprilTagLL bestCamera){
+        double robotSpeed = swerve.speedMagnitude();
+        //int numberOfTagsSeen = bestCamera.getNumberOfTags();
+        SmartDashboard.putNumber("Robot Speed", robotSpeed);
+        SmartDashboard.putNumber("Rotation Speed", rotationSpeed);
+        return (robotSpeed * FOMConstants.CAM_CNSTANT*2) + (3*rotationSpeed);
+    }
+
+     private double odometryFOM(){
+
+        double robotSpeed = swerve.speedMagnitude();
+        
+        double newTime = Timer.getFPGATimestamp();
+        double deltaT = newTime - oldOdometryUpdateTime;
+        oldOdometryUpdateTime = newTime;
+
+        distanceDriven += FOMConstants.ODOMETRY_DISPLACEMENT*(Math.abs(robotSpeed)*deltaT);
+        SmartDashboard.putNumber("Distance Driven", distanceDriven);
+
+
+        return distanceDriven;
+    }
+
+    private WsAprilTagLL getBestCamera(){
+
+        if(LimelightHelpers.getTargetCount(left.CameraID) == 0 && LimelightHelpers.getTargetCount(right.CameraID) == 0){
+            SmartDashboard.putNumber("Priority tag",0);
+            return null;
+        }
+        Optional<PoseEstimate> leftEstimate = left.update(); 
+        Optional<PoseEstimate> rightEstimate = right.update();
+        
+        //checking if any of the camera poses are null
+       if(!leftEstimate.isPresent() && !rightEstimate.isPresent()){
+           return null;
+       }
+
+       SmartDashboard.putBoolean("sees right estimate?", rightEstimate.isPresent());
+        if(!leftEstimate.isPresent() && rightEstimate.isPresent()){
+            SmartDashboard.putNumber("Priority tag",1);
+            return right;
+        }
+        else if(!rightEstimate.isPresent() && leftEstimate.isPresent()){
+            SmartDashboard.putNumber("Priority tag",2);
+            return left;
+        }
+
+        int lID = left.tid;
+        int rID = right.tid;
+
+            SmartDashboard.putNumber("Priority tag",3);
+            // Get distance from priority tag to each camera
+            /*
+             * Calcualte the distance by getting camera pose coordinates and the coordinates of priority tag and get distance
+             * 
+             */
+                double leftDistance = 0;
+                double rightDistance = 0;
+               
+            
+                RawFiducial[] arrayOfTagsForLeftCamera = LimelightHelpers.getRawFiducials(left.CameraID);
+                RawFiducial[] arrayOfTagsForRightCamera = LimelightHelpers.getRawFiducials(right.CameraID);
+
+                for(int i = 0; i < arrayOfTagsForLeftCamera.length; i++ ){
+                    if(arrayOfTagsForLeftCamera[i].id == lID){
+                        leftDistance = arrayOfTagsForLeftCamera[i].distToCamera;
+                    }
+                }
+                for(int i = 0; i < arrayOfTagsForRightCamera.length; i++ ){
+                    if(arrayOfTagsForRightCamera[i].id == rID){
+                        rightDistance = arrayOfTagsForRightCamera[i].distToCamera;
+                    }
+                }
+                if (leftDistance < rightDistance){
+                    SmartDashboard.putNumber("Priority tag",4);
+                    return left;
+                }else if(leftDistance > rightDistance){
+    
+                    SmartDashboard.putNumber("Priority tag",5);
+                    return right;
+                } 
+    
+        return null;
+
+
+    }
+
+
+     public double getStdDev(Optional<PoseEstimate> bestEstimate) {
+            return bestEstimate.isPresent() && bestEstimate.get().rawFiducials.length > 0 ? Math.pow(Arrays.stream(bestEstimate.get().rawFiducials).mapToDouble(fiducial -> fiducial.distToCamera).min().getAsDouble(),2) / bestEstimate.get().tagCount : Double.MAX_VALUE;
     }
 
     @Override
@@ -143,6 +290,7 @@ public class WsPose implements Subsystem {
     */
     public void resetPose(Pose2d initialPose) {
         estimatedPose = initialPose;
+        odometryPose = initialPose;
         poseBuffer.clear();
     }
 
@@ -155,29 +303,29 @@ public class WsPose implements Subsystem {
 
     private void addVisionObservation(PoseEstimate observation, double weight) {
 
-        // SmartDashboard.putNumber("auto weight", weight);
-        Optional<Pose2d> sample = poseBuffer.getSample(observation.timestampSeconds);
-        if (sample.isEmpty()) {
-            // exit if not there
-            return;
-        }
-
-        // sample --> odometryPose transform and backwards of that
-        //var sampleToOdometryTransform = new Transform2d(sample.get(), odometryPose);
-        //var odometryToSampleTransform = new Transform2d(odometryPose, sample.get());
-
-        // get old estimate by applying odometryToSample Transform
-        //Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
-
-        // difference between estimate and vision pose
-        //Transform2d transform = new Transform2d(estimateAtTime, observation.pose);
-        //transform = transform.times(Math.max(1, weight));
+        SmartDashboard.putNumber("auto weight", weight);
+            Optional<Pose2d> sample = poseBuffer.getSample(bestEstimate.timestampSeconds);
+            if (sample.isEmpty()) {
+                // exit if not there
+                return;
+            }
+    
+            // sample --> odometryPose transform and backwards of that
+            var sampleToOdometryTransform = new Transform2d(sample.get(), odometryPose); // current bservatin 
+            var odometryToSampleTransform = new Transform2d(odometryPose, sample.get());
+    
+            // get old estimate by applying odometryToSample Transform
+            Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
+      // difference between estimate and vision pose
+          
+            Transform2d transform = new Transform2d(estimateAtTime, bestEstimate.pose);
+        transform = transform.times(Math.max(1, weight));
 
         // Recalculate current estimate by applying scaled transform to old estimate
         // then replaying odometry data
-        // estimatedPose = estimateAtTime.plus(transform).plus(sampleToOdometryTransform);
-        //estimatedPose = observation.pose; 
-        swerve.resetTranslation(observation.pose.getX(), observation.pose.getY());
+        estimatedPose = estimateAtTime.plus(transform).plus(sampleToOdometryTransform);
+        }
+
     }
 
     // YEAR SUBSYSTEM ACCESS METHODS
