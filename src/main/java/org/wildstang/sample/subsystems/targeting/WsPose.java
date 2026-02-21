@@ -8,6 +8,7 @@ import org.wildstang.sample.subsystems.Turret;
 import org.wildstang.sample.subsystems.swerve.DriveConstants;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import org.wildstang.sample.subsystems.targeting.LimelightHelpers.PoseEstimate;
+import org.wildstang.sample.subsystems.targeting.LimelightHelpers.RawFiducial;
 
 import java.util.Optional;
 import java.util.Vector;
@@ -303,7 +304,7 @@ public class WsPose implements Subsystem {
     private void addVisionObservation(PoseEstimate observation, double weight) {
 
         SmartDashboard.putNumber("auto weight", weight);
-            Optional<Pose2d> sample = poseBuffer.getSample(bestEstimate.timestampSeconds);
+            Optional<Pose2d> sample = poseBuffer.getSample(observation.timestampSeconds);
             if (sample.isEmpty()) {
                 // exit if not there
                 return;
@@ -317,15 +318,15 @@ public class WsPose implements Subsystem {
             Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
       // difference between estimate and vision pose
           
-            Transform2d transform = new Transform2d(estimateAtTime, bestEstimate.pose);
+            Transform2d transform = new Transform2d(estimateAtTime, observation.pose);
         transform = transform.times(Math.max(1, weight));
 
         // Recalculate current estimate by applying scaled transform to old estimate
         // then replaying odometry data
         estimatedPose = estimateAtTime.plus(transform).plus(sampleToOdometryTransform);
-        }
-
     }
+
+    
 
     // YEAR SUBSYSTEM ACCESS METHODS
 
