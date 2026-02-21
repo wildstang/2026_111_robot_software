@@ -212,7 +212,10 @@ public class SwerveDrive extends SwerveDriveTemplate {
     @Override
     public void update() {
         // Logger.processInputs("Swerve", this);
-        pose.addOdometryObservation(swerve.getState().Pose);
+        swerveState = swerve.getState();
+        swervePose = swerveState.Pose;
+        swerveGyro = swervePose.getRotation().getDegrees();
+        pose.addOdometryObservation(swervePose);
 
         if (driveState == DriveType.TELEOP) {
             this.swerveSignal.setTranslation(horizontalPower, verticalPower);

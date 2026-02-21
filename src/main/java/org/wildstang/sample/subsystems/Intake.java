@@ -9,6 +9,8 @@ import org.wildstang.hardware.roborio.outputs.WsTalon;
 import org.wildstang.sample.robot.WsInputs;
 import org.wildstang.sample.robot.WsOutputs;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 public class Intake implements Subsystem{
     
     private WsJoystickAxis leftTrigger;
@@ -25,8 +27,9 @@ public class Intake implements Subsystem{
 
     public enum DeployState {IN, OUT, STOWED};
     public enum IntakeState {INTAKING, NEUTRAL, REVERSE, SLOW};
-    private DeployState deploy = DeployState.IN;
+    private DeployState deploy = DeployState.OUT;
     private IntakeState direction = IntakeState.NEUTRAL;
+    private double deployStart;
 
 
     @Override
@@ -57,10 +60,12 @@ public class Intake implements Subsystem{
         intakeMotor = (WsTalon) WsOutputs.INTAKE.get();
         deployMotor = (WsTalon) WsOutputs.INTAKE_DEPLOY.get();
         //we'll need to do some motor initializing here, intake_deploy PID and current limits for both of them
-        deployMotor.initClosedLoop(0.1,0,0);
+        deployMotor.initClosedLoop(2.0,0,0);
+        // deployMotor.addClosedLoop(2.0, 0, 0);
         intakeMotor.enableFOC();
         intakeMotor.setCurrentLimit(70,70);
-        deployMotor.setCurrentLimit(40,40);
+        deployMotor.setCurrentLimit(70,70);
+        deployStart = deployMotor.getPosition();
 
         rightTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.DRIVER_RIGHT_TRIGGER);
         rightTrigger.addInputListener(this);
@@ -87,27 +92,34 @@ public class Intake implements Subsystem{
     @Override
     public void update() {
         if(direction == IntakeState.INTAKING){
-            intakeMotor.setSpeed(1.0);
-        }
-        else if (direction == IntakeState.REVERSE){
             intakeMotor.setSpeed(-1.0);
         }
+        else if (direction == IntakeState.REVERSE){
+            intakeMotor.setSpeed(1.0);
+        }
         else if (direction == IntakeState.SLOW){
-            intakeMotor.setSpeed(0.15);
+            intakeMotor.setSpeed(-0.15);
         }
         else{
            intakeMotor.setSpeed(0.0);
         }
         
         if(deploy == DeployState.IN){
-            deployMotor.setPosition(-1.0);
+            deployMotor.setPosition(deployStart-2.45);
         }
         if(deploy == DeployState.OUT){
-            deployMotor.setPosition(0.0);
+            if (Math.abs(deployMotor.getPosition()-deployStart)>0.05) deployMotor.setSpeed(0.1);
+            else deployMotor.setSpeed(0);
+            // else deployMotor.setPosition(deployStart, 0);
         }
         if(deploy == DeployState.STOWED){
-            deployMotor.setPosition(-0.5);
+            if (Math.abs(deployMotor.getPosition()-deployStart)>0.05) deployMotor.setSpeed(0.1);
+            else deployMotor.setSpeed(0);
+            // else deployMotor.setPosition(deployStart, 0);
         }
+        SmartDashboard.putNumber("Intake Deploy position", deployMotor.getPosition());
+        SmartDashboard.putNumber("Intake target", deploy != DeployState.IN ? deployStart : deployStart-2.45);
+        SmartDashboard.putString("Intake state", deploy.toString());
     }
 
     @Override

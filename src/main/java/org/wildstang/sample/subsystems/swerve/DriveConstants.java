@@ -93,9 +93,9 @@ public final class DriveConstants {
 
     //bevel gear points to the left
     //find magnet offset
-    private static final double FL_encoderOffset = 0.2648;
+    private static final double FL_encoderOffset = 0.2365;
     //find magnet offset
-    private static final double FR_encoderOffset = -0.2236;
+    private static final double FR_encoderOffset = -0.2832;
     //find magnet offset
     private static final double BL_encoderOffset = -0.4353;
     //find magnet offset

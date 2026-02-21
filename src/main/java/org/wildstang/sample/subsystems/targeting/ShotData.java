@@ -21,13 +21,13 @@ public final class ShotData {
         return lookupTable(shotDistance*mToIn, tof);
     }
     public static double getFlywheelPower(double shotDistance){
-        return lookupTable(shotDistance*mToIn, flywheelPower);
+        return 100*lookupTable(shotDistance*mToIn, flywheelPower);
     }
     public static double getHoodAngle(double shotDistance){
         return lookupTable(shotDistance*mToIn, hoodAngle);
     }
     public static double getFeedPower(double shotDistance){
-        return lookupTable(shotDistance*mToIn, feedPower);
+        return 100*lookupTable(shotDistance*mToIn, feedPower);
     }
     private static double lookupTable(double distanceValue, double[] data){
         if (distanceValue < distances[0]) return data[0];

@@ -47,7 +47,7 @@ public class Ballpath implements Subsystem{
         ballpathMotor.enableFOC();
         ballpathMotor.setCurrentLimit(70, 70);
 
-        operatorA = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_FACE_LEFT);
+        operatorA = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_FACE_DOWN);
         operatorA.addInputListener(this);
 
         driverLT = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.DRIVER_LEFT_TRIGGER);

@@ -16,7 +16,7 @@ public class Climb implements Subsystem{
     @Override
     public void init() {
         climb1Motor = (WsTalon) WsOutputs.CLIMB1.get();
-        climb2Motor = (WsTalon) WsOutputs.CLIMB2.get();
+        // climb2Motor = (WsTalon) WsOutputs.CLIMB2.get();
     }
 
     @Override

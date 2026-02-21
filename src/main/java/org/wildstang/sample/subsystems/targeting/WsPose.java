@@ -121,6 +121,8 @@ public class WsPose implements Subsystem {
                 firingTarget = isFeedingLeft() ? VisionConsts.highFeedPos : VisionConsts.lowFeedPos;
             }
         }
+        SmartDashboard.putNumber("Pose firing X", firingTarget.getX());
+        SmartDashboard.putNumber("Pose firing Y", firingTarget.getY());
     }
 
     public double getStdDev(Optional<PoseEstimate> estimate) {
@@ -205,7 +207,7 @@ public class WsPose implements Subsystem {
     //rather than an object[], we can probably return a GameState enum (from turret) in one method,
     //and then a second method that takes in a GameState and returns the double of the angle
     public double angleOfTurret(){
-        return Math.atan2(firingTarget.getY()-estimatedPose.getY(), firingTarget.getX() - estimatedPose.getX());
+        return Math.toDegrees(Math.atan2(firingTarget.getY()-estimatedPose.getY(), firingTarget.getX() - estimatedPose.getX()));
     }
 
     public double fromFieldToRobotAngle(double fieldAngle){

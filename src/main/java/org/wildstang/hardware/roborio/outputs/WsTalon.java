@@ -254,8 +254,7 @@ public class WsTalon extends WsMotorController {
      * @param target the encoder target value to track to
      */
     public void setPosition(double target){
-        positionRequest.withSlot(0);
-        positionRequest.withPosition(target);
+        positionRequest.withPosition(target).withSlot(0);
         currentRequest = RequestType.POSITION;
     }
 
@@ -265,8 +264,7 @@ public class WsTalon extends WsMotorController {
      * @param slotID the ID slot of the sparkmax to use
      */
     public void setPosition(double target, int slotID){
-        positionRequest.withSlot(slotID);
-        positionRequest.withPosition(target);
+        positionRequest.withPosition(target).withSlot(slotID);
         currentRequest = RequestType.POSITION;
     }
 

@@ -33,8 +33,8 @@ public class Turret implements Subsystem{
     @Override
     public void init() {
         turretMotor = (WsTalon) WsOutputs.TURRET.get();
-        turretMotor.initClosedLoop(0.1, 0.0, 0.0, 0.03, 0.0, true);
-        turretMotor.setCurrentLimit(30,30);
+        turretMotor.initClosedLoop(0.16, 0.0, 0.0, 0.03, 0.0, true);
+        turretMotor.setCurrentLimit(40,40);
 
         turretStart = turretMotor.getPosition()-(turretStartOffset);
     }
@@ -50,10 +50,12 @@ public class Turret implements Subsystem{
         actualAngle = rotateTurret();
         
         turretMotor.setPosition(actualAngle*43.5/360+turretStart);
-        SmartDashboard.putNumber("Turret position", turretMotor.getPosition()-turretStart);
+        SmartDashboard.putNumber("Turret position", turretMotor.getPosition());
         SmartDashboard.putNumber("Turret target", actualAngle*43.5/360+turretStart);
-        SmartDashboard.putNumber("Turret robot centric target", desiredTurretAngle+turretStartOffset);
+        SmartDashboard.putNumber("Turret robot centric target", desiredTurretAngle);
         SmartDashboard.putBoolean("Turret good to fire", goodToFire());
+        SmartDashboard.putNumber("Turret angleofturret", pose.angleOfTurret());
+
     }
 
     public double rotateTurret(){

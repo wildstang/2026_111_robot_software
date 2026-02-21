@@ -47,11 +47,10 @@ public class Launcher implements Subsystem{
     public void init() {
         flywheelMotor = (WsTalon) WsOutputs.FLYWHEEL.get();
         flywheelMotor.enableFOC();
-        flywheelMotor.initClosedLoop(0.08,0.0,0.0);
+        flywheelMotor.initClosedLoop(0.05,0.0,0.0, 0.0, 0.1);
         flywheelMotor.setCurrentLimit(120, 70);
 
         hoodMotor = (WsTalon) WsOutputs.HOOD.get();
-        hoodMotor.initClosedLoop(0.2, 0.0,0.0, 0.03, 0.0, true);
         hoodMotor.setCurrentLimit(50,50);
 
         driverLeftTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.DRIVER_LEFT_TRIGGER);
@@ -124,7 +123,8 @@ public class Launcher implements Subsystem{
                 else hoodPos = HOODMAX;
                 break;
         }
-        flywheelMotor.setVelocity(flywheelVel);
+        if (flywheelVel != 0.0) flywheelMotor.setVelocity(flywheelVel);
+        else flywheelMotor.setSpeed(0);
         setHood(hoodPos);
         flywheelActual = flywheelMotor.getVelocity();
         hoodActual = hoodMotor.getPosition() - hoodStart;
@@ -163,9 +163,14 @@ public class Launcher implements Subsystem{
         return "Launcher";
     }
     private void setHood(double hoodPos){
-        if (hoodPos > HOODMAX) hoodMotor.setPosition(hoodStart+HOODMAX);
-        else if (hoodPos < HOODMIN) hoodMotor.setPosition(hoodStart+HOODMIN);
-        else hoodMotor.setPosition(hoodPos+hoodStart);
+        double targetNew = 0;
+        if (hoodPos > HOODMAX) targetNew = hoodStart+HOODMAX;
+        else if (hoodPos < HOODMIN) targetNew = hoodStart+HOODMIN;
+        else targetNew = hoodPos+hoodStart;
+        double error = targetNew - hoodMotor.getPosition();
+        if (error > 1) hoodMotor.setSpeed(0.3);
+        if (error < -1) hoodMotor.setSpeed(-0.1);
+        else hoodMotor.setSpeed(error*0.05 + 0.028*Math.signum(error));
     }
     public boolean isActive(){
         return !(currentState == GameStates.STOW);
