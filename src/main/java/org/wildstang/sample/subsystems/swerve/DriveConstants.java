@@ -41,7 +41,7 @@ public final class DriveConstants {
     public static final double DRIVE_F_I = 0.000;//
 
     //heading PID value
-    public static final double heading_P = 0.2;
+    public static final double heading_P = 0.175;
     //heading PID value
     public static final double heading_D = 0.0;
 

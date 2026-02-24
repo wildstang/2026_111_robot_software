@@ -20,6 +20,6 @@ public class VisionConsts {
     public static final double halfFieldY = 158.85*inToM;
     public static final Translation2d lowFeedPos = new Translation2d(50*inToM, 36*inToM);
     public static final Translation2d highFeedPos = new Translation2d(50*inToM, 282*inToM);
-    public static final double turretOffset = 120; //in degrees
+    public static final double turretOffset = 145; //in degrees
 
 }

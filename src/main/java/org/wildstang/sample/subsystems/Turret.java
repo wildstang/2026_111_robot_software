@@ -19,7 +19,7 @@ public class Turret implements Subsystem{
     public double desiredTurretAngle, actualAngle = 0;
     public SwerveDrive swerve;
 
-    private final double turretStartOffset = 120 * 43.5/360;
+    private final double turretStartOffset = 145 * 43.5/360;
 
     private WsTalon turretMotor;
     private boolean hadWrapped = false;
@@ -86,7 +86,7 @@ public class Turret implements Subsystem{
             }*/
         // }else if(turretState == GameStates.HOMING){
 
-            if((desiredTurretAngle <= 240) && (desiredTurretAngle >= 0)){
+            if((desiredTurretAngle <= 360) && (desiredTurretAngle >= 0)){
                 return desiredTurretAngle;
             }else if(desiredTurretAngle <= 270){
                 hadWrapped = true;
@@ -119,18 +119,19 @@ public class Turret implements Subsystem{
 
 
     public boolean goodToFire(){
-        if (desiredTurretAngle > 240) return false;
+        // if (desiredTurretAngle > 240) return false;
         //good
         double wiggle = Math.abs(rotateTurret()*43.5/360+turretStart - turretMotor.getPosition());
         return wiggle < 1.0;
     }
     public boolean keepFiring(){
-        if (!hadWrapped) return true;
-        if (Math.abs(rotateTurret()*43.5/360+turretStart - turretMotor.getPosition()) < 1.0){
-            hadWrapped = false;
-            return true;
-        }
-        return false;
+        return true;
+        // if (!hadWrapped) return true;
+        // if (Math.abs(rotateTurret()*43.5/360+turretStart - turretMotor.getPosition()) < 1.0){
+        //     hadWrapped = false;
+        //     return true;
+        // }
+        // return false;
     }
 
     @Override

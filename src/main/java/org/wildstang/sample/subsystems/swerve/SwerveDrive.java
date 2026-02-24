@@ -114,23 +114,23 @@ public class SwerveDrive extends SwerveDriveTemplate {
 
         // Cardinal directions
         if (source == faceUp && faceUp.getValue()){
-            if (faceLeft.getValue()) swerveSignal.setRotLocked(60);
-            else if (faceRight.getValue()) swerveSignal.setRotLocked(300);
+            if (faceLeft.getValue()) swerveSignal.setRotLocked(45);
+            else if (faceRight.getValue()) swerveSignal.setRotLocked(315);
             else  swerveSignal.setRotLocked(0);
         }
         if (source == faceLeft && faceLeft.getValue()){
-            if (faceUp.getValue()) swerveSignal.setRotLocked(60);
-            else if (faceDown.getValue()) swerveSignal.setRotLocked(120);
+            if (faceUp.getValue()) swerveSignal.setRotLocked(45);
+            else if (faceDown.getValue()) swerveSignal.setRotLocked(135);
             else swerveSignal.setRotLocked(90);
         }
         if (source == faceDown && faceDown.getValue()){
-            if (faceLeft.getValue()) swerveSignal.setRotLocked(120);
-            else if (faceRight.getValue()) swerveSignal.setRotLocked(240);
+            if (faceLeft.getValue()) swerveSignal.setRotLocked(135);
+            else if (faceRight.getValue()) swerveSignal.setRotLocked(225);
             else swerveSignal.setRotLocked(180);
         }
         if (source == faceRight && faceRight.getValue()){
-            if (faceUp.getValue()) swerveSignal.setRotLocked(300);
-            else if (faceDown.getValue()) swerveSignal.setRotLocked(240);
+            if (faceUp.getValue()) swerveSignal.setRotLocked(315);
+            else if (faceDown.getValue()) swerveSignal.setRotLocked(225);
             else swerveSignal.setRotLocked(270);
         }
         if (leftBumper.getValue()){
