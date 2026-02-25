@@ -106,31 +106,31 @@ public class SwerveDrive extends SwerveDriveTemplate {
         
         //reset gyro
         if (source == select && select.getValue()) {
-            while (swerveGyro > 0.1 || swerveGyro < -0.1){
+            // while (swerveGyro > 0.1 || swerveGyro < -0.1){
                 swerve.resetRotation(new Rotation2d(0));
-            }
+            // }
             swerveSignal.setRotLocked(0);
         }
 
         // Cardinal directions
         if (source == faceUp && faceUp.getValue()){
-            if (faceLeft.getValue()) swerveSignal.setRotLocked(60);
-            else if (faceRight.getValue()) swerveSignal.setRotLocked(300);
+            if (faceLeft.getValue()) swerveSignal.setRotLocked(45);
+            else if (faceRight.getValue()) swerveSignal.setRotLocked(315);
             else  swerveSignal.setRotLocked(0);
         }
         if (source == faceLeft && faceLeft.getValue()){
-            if (faceUp.getValue()) swerveSignal.setRotLocked(60);
-            else if (faceDown.getValue()) swerveSignal.setRotLocked(120);
+            if (faceUp.getValue()) swerveSignal.setRotLocked(45);
+            else if (faceDown.getValue()) swerveSignal.setRotLocked(135);
             else swerveSignal.setRotLocked(90);
         }
         if (source == faceDown && faceDown.getValue()){
-            if (faceLeft.getValue()) swerveSignal.setRotLocked(120);
-            else if (faceRight.getValue()) swerveSignal.setRotLocked(240);
+            if (faceLeft.getValue()) swerveSignal.setRotLocked(135);
+            else if (faceRight.getValue()) swerveSignal.setRotLocked(225);
             else swerveSignal.setRotLocked(180);
         }
         if (source == faceRight && faceRight.getValue()){
-            if (faceUp.getValue()) swerveSignal.setRotLocked(300);
-            else if (faceDown.getValue()) swerveSignal.setRotLocked(240);
+            if (faceUp.getValue()) swerveSignal.setRotLocked(315);
+            else if (faceDown.getValue()) swerveSignal.setRotLocked(225);
             else swerveSignal.setRotLocked(270);
         }
         if (leftBumper.getValue()){
@@ -141,7 +141,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
         }
 
         //get rotational joystick
-        double rotSpeed = rightStickHorizontal.getValue()*Math.abs(rightStickHorizontal.getValue());
+        double rotSpeed = -rightStickHorizontal.getValue()*Math.abs(rightStickHorizontal.getValue());
         rotSpeed = swerveHelper.scaleDeadband(rotSpeed, DriveConstants.DEADBAND);
         //if the rotational joystick is being used, the robot should not be auto tracking heading
         if (rotSpeed != 0 || swerveSignal.currentState() == controlState.MANUAL) {
@@ -214,7 +214,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
         // Logger.processInputs("Swerve", this);
         swerveState = swerve.getState();
         swervePose = swerveState.Pose;
-        swerveGyro = swervePose.getRotation().getDegrees();
+        swerveGyro = (swervePose.getRotation().getDegrees()+360.0)%360;
         pose.addOdometryObservation(swervePose);
 
         if (driveState == DriveType.TELEOP) {
@@ -237,6 +237,12 @@ public class SwerveDrive extends SwerveDriveTemplate {
         SmartDashboard.putString("Drive Request Type", swerveSignal.currentState().toString());
         SmartDashboard.putNumber("Rotation target", swerveSignal.getRotTarget());
         SmartDashboard.putNumber("@ speed", speedMagnitude());
+        double robotVelx = speeds().vxMetersPerSecond*Math.cos(Math.toRadians(getGyroAngle()))
+            + speeds().vyMetersPerSecond*Math.cos(Math.toRadians(90 + getGyroAngle()));
+        double robotVely = speeds().vxMetersPerSecond*Math.sin(Math.toRadians(getGyroAngle()))
+            + speeds().vyMetersPerSecond*Math.sin(Math.toRadians(90 + getGyroAngle()));
+        SmartDashboard.putNumber("SOTM speed x", robotVelx);
+        SmartDashboard.putNumber("SOTM speed y", robotVely);
         if (targetPose != null){
             targetPosePublisher.set(targetPose);
         }

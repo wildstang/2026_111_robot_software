@@ -20,8 +20,8 @@ public class Ballpath implements Subsystem{
     WsPose pose;
 
     private WsTalon ballpathMotor;
-    private WsJoystickButton operatorA, operatorLS, operatorRS;
-    private WsJoystickAxis driverLT, operatorLT;
+    private WsJoystickButton operatorA;
+    private WsJoystickAxis driverLT, operatorLT, operatorRT;
 
     public enum GameState {FIRING, READYING, REVERSE, STOP}
     private GameState state = GameState.STOP;
@@ -32,8 +32,8 @@ public class Ballpath implements Subsystem{
     public void inputUpdate(Input source) {
         if(operatorA.getValue()){
             state = GameState.REVERSE;
-        }else if(Math.abs(driverLT.getValue()) > 0.5 || operatorLS.getValue()
-        || Math.abs(operatorLT.getValue()) > 0.5 || operatorRS.getValue()){
+        }else if(Math.abs(driverLT.getValue()) > 0.5 || Math.abs(operatorRT.getValue()) > 0.5
+        || Math.abs(operatorLT.getValue()) > 0.5){
             if (state != GameState.FIRING) state = GameState.READYING;
         }else{
             state = GameState.STOP;
@@ -53,14 +53,12 @@ public class Ballpath implements Subsystem{
         driverLT = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.DRIVER_LEFT_TRIGGER);
         driverLT.addInputListener(this);
 
-        operatorLS = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_LEFT_JOYSTICK_BUTTON);
-        operatorLS.addInputListener(this);
 
         operatorLT = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.OPERATOR_LEFT_TRIGGER);
         operatorLT.addInputListener(this);
 
-        operatorRS = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_RIGHT_JOYSTICK_BUTTON);
-        operatorRS.addInputListener(this);
+        operatorRT = (WsJoystickAxis) WsInputs.OPERATOR_RIGHT_TRIGGER.get();
+        operatorRT.addInputListener(this);
 
         launcher = (Launcher) Core.getSubsystemManager().getSubsystem(WsSubsystems.LAUNCHER);
         turret = (Turret) Core.getSubsystemManager().getSubsystem(WsSubsystems.TURRET);

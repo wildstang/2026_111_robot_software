@@ -11,6 +11,7 @@ import org.wildstang.sample.robot.WsOutputs;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.targeting.WsPose;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Launcher implements Subsystem{
@@ -20,19 +21,19 @@ public class Launcher implements Subsystem{
     private WsTalon flywheelMotor, hoodMotor;
 
     private WsJoystickAxis driverLeftTrigger, operatorRightTrigger, operatorLeftTrigger;
-    private WsJoystickButton operatorLeftBumper, operatorRightBumper;
 
 
-    private enum GameStates {SHOOT, FEED, FEED_LEFT, FEED_RIGHT, STOW};
+    private enum GameStates {SHOOT, FEED, STOW};
     private GameStates currentState = GameStates.STOW;
 
     public boolean inFeedingZone;
+    private Timer shootTimer = new Timer();
 
     
     /* Flywheel Stuff */
     private double flywheelVel = 0.0;
     private double flywheelActual = 0.0;
-    private final double flywheelTolerance = 3.0;
+    private final double flywheelTolerance = 1.0;
 
 
     /* Hood Stuff */
@@ -46,8 +47,8 @@ public class Launcher implements Subsystem{
     @Override
     public void init() {
         flywheelMotor = (WsTalon) WsOutputs.FLYWHEEL.get();
-        flywheelMotor.enableFOC();
-        flywheelMotor.initClosedLoop(0.05,0.0,0.0, 0.0, 0.1);
+        // flywheelMotor.enableFOC();
+        flywheelMotor.initClosedLoop(0.05,0.0,0.0, 0.0, 0.01);
         flywheelMotor.setCurrentLimit(120, 70);
 
         hoodMotor = (WsTalon) WsOutputs.HOOD.get();
@@ -62,27 +63,18 @@ public class Launcher implements Subsystem{
         operatorLeftTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.OPERATOR_LEFT_TRIGGER);
         operatorLeftTrigger.addInputListener(this);
 
-        operatorLeftBumper = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_LEFT_SHOULDER);
-        operatorLeftBumper.addInputListener(this);
-
-        operatorRightBumper = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_RIGHT_SHOULDER);
-        operatorRightBumper.addInputListener(this);
-
         hoodStart = hoodMotor.getPosition();
 
+        shootTimer.start();
     }
 
     @Override
     public void inputUpdate(Input source) {
        
-        if(Math.abs(driverLeftTrigger.getValue()) > 0.5){
+        if(Math.abs(driverLeftTrigger.getValue()) > 0.5 || Math.abs(operatorRightTrigger.getValue()) > 0.5){
             currentState = GameStates.SHOOT;
-        } else if(operatorLeftBumper.getValue()){
-            currentState = GameStates.FEED_LEFT;
         } else if (Math.abs(operatorLeftTrigger.getValue()) > 0.5){
             currentState = GameStates.FEED;
-        } else if (operatorRightBumper.getValue()){
-            currentState = GameStates.FEED_RIGHT;
         } else{
             currentState = GameStates.STOW;
         }
@@ -97,28 +89,18 @@ public class Launcher implements Subsystem{
               
                 flywheelVel = pose.inAllianceZone() ? pose.getFlywheelShootVelocity() : 0.0;
                 hoodPos = pose.getHoodShootPosition();
+                shootTimer.reset();
                 break;
 
             case FEED:
 
                 flywheelVel = pose.inAllianceZone() ? 0.0 :pose.getFlywheelFeedVelocity();
                 hoodPos = HOODMAX;
-                break;
-
-            case FEED_LEFT:
-
-                flywheelVel = pose.canFeedLeft() ? pose.getFlywheelFeedVelocity(): 0.0;
-                hoodPos = HOODMAX;
-                break;
-
-            case FEED_RIGHT: 
-
-                flywheelVel = pose.canFeedRight() ? pose.getFlywheelFeedVelocity(): 0.0;
-                hoodPos = HOODMAX;
+                shootTimer.reset();
                 break;
 
             case STOW:
-                flywheelVel = 0.0;
+                flywheelVel = !shootTimer.hasElapsed(1.0) ? flywheelVel: 0.0;
                 if (pose.inAllianceZone()) hoodPos = pose.getHoodShootPosition();
                 else hoodPos = HOODMAX;
                 break;

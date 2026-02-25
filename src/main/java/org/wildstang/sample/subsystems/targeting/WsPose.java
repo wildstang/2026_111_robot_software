@@ -58,13 +58,12 @@ public class WsPose implements Subsystem {
 
     // WPI blue relative (m and CCW rad)
     public Pose2d estimatedPose = new Pose2d();
-    public Pose2d odometryPose = new Pose2d();
 
     private Translation2d firingTarget = VisionConsts.CENTER_OF_HUB;
 
     StructPublisher<Pose2d> estimatedPosePublisher = NetworkTableInstance.getDefault().getStructTopic("estimatedPose", Pose2d.struct).publish();
-    StructPublisher<Pose2d> odometryPosePublisher = NetworkTableInstance.getDefault().getStructTopic("odometryPose", Pose2d.struct).publish();
     StructPublisher<Pose2d> bestEstimatePosePublisher = NetworkTableInstance.getDefault().getStructTopic("bestEstimatePose", Pose2d.struct).publish();
+    StructPublisher<Pose2d> firingPosePublisher = NetworkTableInstance.getDefault().getStructTopic("firing pose", Pose2d.struct).publish();
 
     private final TimeInterpolatableBuffer<Pose2d> poseBuffer = TimeInterpolatableBuffer.createBuffer(poseBufferSizeSec);
     private double oldOdometryUpdateTime = 0.0;
@@ -104,22 +103,18 @@ public class WsPose implements Subsystem {
         SmartDashboard.putNumber("Rotation Speed", rotationSpeed);
         
         if(bestCamera == null){
-            estimatedPose = odometryPose;
-                SmartDashboard.putString("Vision/BestCamera", "none");
-                odometryPosePublisher.set(odometryPose);
-                estimatedPosePublisher.set(estimatedPose);
-                return;
-            }
-            SmartDashboard.putString("Vision/BestCamera", bestCamera.CameraID);
+            SmartDashboard.putString("Vision/BestCamera", "none");
+            estimatedPosePublisher.set(estimatedPose);
+        } else {
+            //SmartDashboard.putString("Vision/BestCamera", bestCamera.CameraID);
 
             bestEstimate = bestCamera.update().orElse(null);
+        }
             
             
 
         if(bestEstimate == null){
-
-            estimatedPose = odometryPose;
-            SmartDashboard.putString("Vision/BestCamera", bestCamera.CameraID);
+            //SmartDashboard.putString("Vision/BestCamera", bestCamera.CameraID);
             SmartDashboard.putString("Has Reset", "False");
         }else{
             bestStdDev = getStdDev(Optional.of(bestEstimate));
@@ -131,31 +126,17 @@ public class WsPose implements Subsystem {
 
             if(camFOM > odFOM){
           
-                estimatedPose = odometryPose;
                 SmartDashboard.putString("Has Reset", "False");
-            
-            }else if(camFOM < FOMConstants.USE_CAM_WHEN_THIS_CONSTANT && camFOM > odFOM){
-                /*for (int i = 0; i < cameras.length; i++) {
-                    Optional<PoseEstimate> estimate = cameras[i].update();
-                    if (estimate.isPresent() && getStdDev(estimate) < bestStdDev) {
-                        bestEstimate = estimate.get();
-                        bestStdDev = getStdDev(estimate);
-                    }   
-                }*/
-                addVisionObservation(bestEstimate, 1/bestStdDev);
-                odometryPose = estimatedPose;
                 
-            }else if (camFOM < odFOM){
+            }else if (camFOM <= odFOM){
                 addVisionObservation(bestEstimate, 1/bestStdDev);
-                odometryPose = estimatedPose;
 
-                distanceDriven = 0;
+                distanceDriven = camFOM;
                 SmartDashboard.putString("Has Reset", "True");
             }
         }
 
         estimatedPosePublisher.set(estimatedPose);
-        odometryPosePublisher.set(odometryPose);
         
         if (swerve.speedMagnitude() > 0.1){
             if (inAllianceZone()){
@@ -175,6 +156,7 @@ public class WsPose implements Subsystem {
                 firingTarget = isFeedingLeft() ? VisionConsts.highFeedPos : VisionConsts.lowFeedPos;
             }
         }
+        firingPosePublisher.set(new Pose2d(firingTarget, new Rotation2d()));
         SmartDashboard.putNumber("Pose firing X", firingTarget.getX());
         SmartDashboard.putNumber("Pose firing Y", firingTarget.getY());
          SmartDashboard.putNumber("Best Standard Deviation ", bestStdDev);
@@ -262,7 +244,7 @@ public class WsPose implements Subsystem {
                 if (leftDistance < rightDistance){
                     SmartDashboard.putNumber("Priority tag",4);
                     return left;
-                }else if(leftDistance > rightDistance){
+                }else if(leftDistance >= rightDistance){
     
                     SmartDashboard.putNumber("Priority tag",5);
                     return right;
@@ -275,7 +257,9 @@ public class WsPose implements Subsystem {
 
 
      public double getStdDev(Optional<PoseEstimate> bestEstimate) {
-            return bestEstimate.isPresent() && bestEstimate.get().rawFiducials.length > 0 ? Math.pow(Arrays.stream(bestEstimate.get().rawFiducials).mapToDouble(fiducial -> fiducial.distToCamera).min().getAsDouble(),2) / bestEstimate.get().tagCount : Double.MAX_VALUE;
+        return bestEstimate.isPresent() && bestEstimate.get().rawFiducials.length > 0 ? 
+            Math.pow(Arrays.stream(bestEstimate.get().rawFiducials).mapToDouble(fiducial -> fiducial.distToCamera).min().getAsDouble(),2) / bestEstimate.get().tagCount : 
+            Double.MAX_VALUE;
     }
 
     @Override
@@ -290,7 +274,6 @@ public class WsPose implements Subsystem {
     */
     public void resetPose(Pose2d initialPose) {
         estimatedPose = initialPose;
-        odometryPose = initialPose;
         poseBuffer.clear();
     }
 
@@ -303,27 +286,29 @@ public class WsPose implements Subsystem {
 
     private void addVisionObservation(PoseEstimate observation, double weight) {
 
-        SmartDashboard.putNumber("auto weight", weight);
+        // SmartDashboard.putNumber("auto weight", weight);
             Optional<Pose2d> sample = poseBuffer.getSample(observation.timestampSeconds);
             if (sample.isEmpty()) {
                 // exit if not there
                 return;
             }
+        swerve.resetTranslation(observation.pose.getX(), observation.pose.getY());
+        estimatedPose = observation.pose;
     
-            // sample --> odometryPose transform and backwards of that
-            var sampleToOdometryTransform = new Transform2d(sample.get(), odometryPose); // current bservatin 
-            var odometryToSampleTransform = new Transform2d(odometryPose, sample.get());
+    //         // sample --> odometryPose transform and backwards of that
+    //         var sampleToOdometryTransform = new Transform2d(sample.get(), odometryPose); // current bservatin 
+    //         var odometryToSampleTransform = new Transform2d(odometryPose, sample.get());
     
-            // get old estimate by applying odometryToSample Transform
-            Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
-      // difference between estimate and vision pose
+    //         // get old estimate by applying odometryToSample Transform
+    //         Pose2d estimateAtTime = estimatedPose.plus(odometryToSampleTransform);
+    //   // difference between estimate and vision pose
           
-            Transform2d transform = new Transform2d(estimateAtTime, observation.pose);
-        transform = transform.times(Math.max(1, weight));
+    //         Transform2d transform = new Transform2d(estimateAtTime, observation.pose);
+    //     transform = transform.times(Math.max(1, weight));
 
-        // Recalculate current estimate by applying scaled transform to old estimate
-        // then replaying odometry data
-        estimatedPose = estimateAtTime.plus(transform).plus(sampleToOdometryTransform);
+    //     // Recalculate current estimate by applying scaled transform to old estimate
+    //     // then replaying odometry data
+    //     estimatedPose = estimateAtTime.plus(transform).plus(sampleToOdometryTransform);
     }
 
     
@@ -365,8 +350,13 @@ public class WsPose implements Subsystem {
     public Translation2d shootOnTheMove(double dix, double diy){
         //shoot on da move
         double dih = Math.hypot(dix, diy);
-        double robotVelx = swerve.getSpeeds().vxMetersPerSecond;
-        double robotVely = swerve.getSpeeds().vyMetersPerSecond;
+        double robotx = swerve.getSpeeds().vxMetersPerSecond;
+        double roboty = swerve.getSpeeds().vyMetersPerSecond;
+
+        double robotVelx = robotx*Math.cos(Math.toRadians(swerve.getGyroAngle()))
+            + roboty*Math.cos(Math.toRadians(90 + swerve.getGyroAngle()));
+        double robotVely = robotx*Math.sin(Math.toRadians(swerve.getGyroAngle()))
+            + roboty*Math.sin(Math.toRadians(90 + swerve.getGyroAngle()));
         
         double dnewx = dix - robotVelx * ShotData.getTOF(dih);
         double dnewy = diy - robotVely * ShotData.getTOF(dih);
@@ -400,10 +390,10 @@ public class WsPose implements Subsystem {
             //     //right up against the hub
             //     return false;
             // }
-            if(estimatedPose.getX() < 46*inToM && estimatedPose.getY() >= 120*inToM && estimatedPose.getY() <= 160*inToM){
-                //behind climbing area
-                return false;
-            }
+            // if(estimatedPose.getX() < 46*inToM && estimatedPose.getY() >= 120*inToM && estimatedPose.getY() <= 160*inToM){
+            //     //behind climbing area
+            //     return false;
+            // }
 
         } else {
              if(estimatedPose.getY() <= 170*inToM && estimatedPose.getY() >= 130*inToM){
