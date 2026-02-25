@@ -3,7 +3,9 @@ package org.wildstang.sample.subsystems;
 import org.wildstang.framework.core.Core;
 import org.wildstang.framework.io.inputs.Input;
 import org.wildstang.framework.subsystems.Subsystem;
+import org.wildstang.hardware.roborio.inputs.WsJoystickAxis;
 import org.wildstang.hardware.roborio.outputs.WsTalon;
+import org.wildstang.sample.robot.WsInputs;
 import org.wildstang.sample.robot.WsOutputs;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
@@ -12,6 +14,8 @@ import org.wildstang.sample.subsystems.targeting.WsPose;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Turret implements Subsystem{
+
+    private WsJoystickAxis operatorLT;
 
     WsPose pose;
     
@@ -25,13 +29,18 @@ public class Turret implements Subsystem{
     private boolean hadWrapped = false;
 
     double turretStart = 0;
+    private boolean feedOn = false;
+    double turretPos = 0;
 
     @Override
     public void inputUpdate(Input source) {
+        feedOn = Math.abs(operatorLT.getValue()) > 0.5;
     }
 
     @Override
     public void init() {
+        operatorLT = (WsJoystickAxis) WsInputs.OPERATOR_LEFT_TRIGGER.get();
+        operatorLT.addInputListener(this);
         turretMotor = (WsTalon) WsOutputs.TURRET.get();
         turretMotor.initClosedLoop(0.16, 0.0, 0.0, 0.03, 0.0, true);
         turretMotor.setCurrentLimit(40,40);
@@ -46,11 +55,12 @@ public class Turret implements Subsystem{
     @Override
     public void update() {
         //returns staic angle of turret, robot centric, wrapped [0,360)
-        desiredTurretAngle = pose.fromFieldToRobotAngle(pose.angleOfTurret());
+        if (pose.inAllianceZone() || feedOn) desiredTurretAngle = pose.fromFieldToRobotAngle(pose.angleOfTurret());
         actualAngle = rotateTurret();
         
         turretMotor.setPosition(actualAngle*43.5/360+turretStart);
-        SmartDashboard.putNumber("Turret position", turretMotor.getPosition());
+        turretPos = turretMotor.getPosition();
+        SmartDashboard.putNumber("Turret position", turretPos);
         SmartDashboard.putNumber("Turret target", actualAngle*43.5/360+turretStart);
         SmartDashboard.putNumber("Turret robot centric target", desiredTurretAngle);
         SmartDashboard.putBoolean("Turret good to fire", goodToFire());
@@ -125,13 +135,11 @@ public class Turret implements Subsystem{
         return wiggle < 1.0;
     }
     public boolean keepFiring(){
-        return true;
-        // if (!hadWrapped) return true;
-        // if (Math.abs(rotateTurret()*43.5/360+turretStart - turretMotor.getPosition()) < 1.0){
-        //     hadWrapped = false;
-        //     return true;
-        // }
-        // return false;
+        if ((actualAngle < 30 && turretPos>turretStart+(330*43.5/360)) || 
+                (actualAngle > 330 && turretPos < turretStart+(30*43.5/360))) 
+            hadWrapped = true;
+        if (Math.abs(rotateTurret()*43.5/360+turretStart - turretMotor.getPosition())<1.0) hadWrapped = false;
+        return !hadWrapped;
     }
 
     @Override

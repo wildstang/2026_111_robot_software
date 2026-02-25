@@ -18,10 +18,10 @@ public class Intake implements Subsystem{
     private WsJoystickButton rightShoulder;
 
     private WsJoystickAxis operatorLeftTrigger;
-    private WsJoystickButton operatorLeftShoulder;
-    private WsJoystickButton operatorRightShoulder;
+    private WsJoystickAxis operatorRightTrigger;
     private WsJoystickButton operatorX;
     private WsJoystickButton operatorB;
+    private WsJoystickButton operatorY;
 
     private WsTalon intakeMotor, deployMotor;
 
@@ -34,10 +34,10 @@ public class Intake implements Subsystem{
 
     @Override
     public void inputUpdate(Input source) {
-        if(Math.abs(rightTrigger.getValue()) > 0 || rightShoulder.getValue()){
+        if(Math.abs(rightTrigger.getValue()) > 0.5 || rightShoulder.getValue()){
             direction = IntakeState.INTAKING;
-        } else if((Math.abs(leftTrigger.getValue()) > 0 || Math.abs(operatorLeftTrigger.getValue()) > 0 || 
-                operatorLeftShoulder.getValue() || operatorRightShoulder.getValue())){
+        } else if((Math.abs(leftTrigger.getValue()) > 0.5 || Math.abs(operatorLeftTrigger.getValue()) > 0.5 ||
+                Math.abs(operatorRightTrigger.getValue()) > 0.5)){
             direction = IntakeState.SLOW;
         } else if(operatorB.getValue()){
             direction = IntakeState.REVERSE;
@@ -47,19 +47,14 @@ public class Intake implements Subsystem{
         
        if(operatorX.getValue()){
             deploy = DeployState.IN;
-       } else if (Math.abs(rightTrigger.getValue()) > 0 || rightShoulder.getValue()){
+       } else if (Math.abs(rightTrigger.getValue()) > 0.5 || rightShoulder.getValue()){
             deploy = DeployState.INTAKING;
-       } else if (Math.abs(leftTrigger.getValue()) > 0 || Math.abs(operatorLeftTrigger.getValue()) > 0){
+       } else if (Math.abs(leftTrigger.getValue()) > 0.5 || Math.abs(operatorLeftTrigger.getValue()) > 0.5 || 
+                operatorY.getValue() || Math.abs(operatorRightTrigger.getValue()) > 0.5){
             deploy = DeployState.STOWED;
        } else {
             deploy = DeployState.OUT;
        }
-        // }  else if(Math.abs(rightTrigger.getValue()) > 0 || rightShoulder.getValue()){
-        //     deploy = DeployState.OUT;
-        // } else {
-        //     deploy = DeployState.STOWED;
-        // }
-
     }
 
     @Override
@@ -82,14 +77,14 @@ public class Intake implements Subsystem{
         rightShoulder.addInputListener(this);
         operatorLeftTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.OPERATOR_LEFT_TRIGGER);
         operatorLeftTrigger.addInputListener(this);
-        operatorRightShoulder = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_RIGHT_SHOULDER);
-        operatorRightShoulder.addInputListener(this);
-        operatorLeftShoulder = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_LEFT_SHOULDER);
-        operatorLeftShoulder.addInputListener(this);
+        operatorRightTrigger = (WsJoystickAxis) WsInputs.OPERATOR_RIGHT_TRIGGER.get();
+        operatorRightTrigger.addInputListener(this);
         operatorX = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_FACE_LEFT);
         operatorX.addInputListener(this);
         operatorB = (WsJoystickButton) Core.getInputManager().getInput(WsInputs.OPERATOR_FACE_RIGHT);
         operatorB.addInputListener(this);
+        operatorY = (WsJoystickButton) WsInputs.OPERATOR_FACE_UP.get();
+        operatorY.addInputListener(this);
     }
 
     @Override
