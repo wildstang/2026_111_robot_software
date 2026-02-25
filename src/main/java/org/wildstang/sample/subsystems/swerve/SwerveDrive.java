@@ -383,7 +383,9 @@ public class SwerveDrive extends SwerveDriveTemplate {
     public double distanceToTarget(){
         return pose.estimatedPose.getTranslation().getDistance(targetPose.getTranslation());
     }
-
+    public Pose2d getSwervePose(){
+        return swervePose;
+    }
 
     // @Override
     // public void toLog(LogTable table) {
