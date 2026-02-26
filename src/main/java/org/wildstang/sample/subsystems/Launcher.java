@@ -23,7 +23,7 @@ public class Launcher implements Subsystem{
     private WsJoystickAxis driverLeftTrigger, operatorRightTrigger, operatorLeftTrigger;
 
 
-    private enum GameStates {SHOOT, FEED, STOW};
+    public enum GameStates {SHOOT, FEED, STOW};
     private GameStates currentState = GameStates.STOW;
 
     public boolean inFeedingZone;
@@ -140,7 +140,7 @@ public class Launcher implements Subsystem{
         pose = (WsPose) Core.getSubsystemManager().getSubsystem(WsSubsystems.WS_POSE);
     }
 
-    public void setLauncherState(GameState currState){
+    public void setLauncherState(GameStates currState){
         currentState = currState;
 
     }

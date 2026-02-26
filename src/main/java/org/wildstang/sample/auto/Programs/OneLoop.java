@@ -1,4 +1,4 @@
-package main.java.org.wildstang.sample.auto.Programs;
+package org.wildstang.sample.auto.Programs;
 import org.wildstang.framework.auto.AutoProgram;
 import org.wildstang.framework.auto.AutoStep;
 import org.wildstang.framework.auto.steps.AutoParallelStepGroup;
@@ -13,7 +13,7 @@ import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import main.java.org.wildstang.sample.auto.Steps.AutoStartLauncherStep;
+import org.wildstang.sample.auto.Steps.AutoStartLauncherStep;
 
 public class OneLoop extends AutoProgram {
     
@@ -26,7 +26,7 @@ public class OneLoop extends AutoProgram {
         
         AutoParallelStepGroup group1 = new AutoParallelStepGroup();
         group1.addStep(new AutoStartIntakeStep());
-        group1.addStep(new addStep(new SwerveToPointStep(swerve, new Pose2d(6.541105270385742, 2.3875577449798584, new Rotation2d(0)))));
+        group1.addStep(new SwerveToPointStep(swerve, new Pose2d(6.541105270385742, 2.3875577449798584, new Rotation2d(0))));
 
         addStep(group1);
 
@@ -51,7 +51,7 @@ public class OneLoop extends AutoProgram {
     @Override
     public String toString() {
         // TODO Auto-generated method stub
-        return "Rush Middle";
+        return "One Loop";
     }
     
 
