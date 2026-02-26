@@ -13,6 +13,7 @@ import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import main.java.org.wildstang.sample.auto.Steps.AutoStartLauncherStep;
 
 public class OneLoop extends AutoProgram {
     
@@ -37,8 +38,9 @@ public class OneLoop extends AutoProgram {
         addStep(new SwerveToPointStep(swerve, new Pose2d(5.161707878112793 , 5.702230453491211 , new Rotation2d(0 ))));
 
         AutoParallelStepGroup group2 = new AutoParallelStepGroup();
-        group1.addStep(new AutoReadyBallpathStep());
-        group1.addStep(new SwerveToPointStep(swerve, new Pose2d(2.7117323875427246 , 5.496349811553955 , new Rotation2d(0 ))));
+        group2.addStep(new AutoReadyBallpathStep());
+        group2.addStep(new AutoStartLauncherStep());
+        group2.addStep(new SwerveToPointStep(swerve, new Pose2d(2.7117323875427246 , 5.496349811553955 , new Rotation2d(0 ))));
 
         addStep(group2);
         addStep(new SwerveToPointStep(swerve, new Pose2d(2.7117323875427246 , 4.425772666931152 , new Rotation2d(0 ))));

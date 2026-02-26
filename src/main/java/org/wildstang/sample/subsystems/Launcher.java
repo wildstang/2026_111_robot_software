@@ -140,6 +140,10 @@ public class Launcher implements Subsystem{
         pose = (WsPose) Core.getSubsystemManager().getSubsystem(WsSubsystems.WS_POSE);
     }
 
+    public void setLauncherState(GameState currState){
+        currentState = currState;
+
+    }
     @Override
     public String getName() {
         return "Launcher";
