@@ -1,12 +1,12 @@
-package main.java.org.wildstang.sample.auto.Steps;
+package org.wildstang.sample.auto.Steps;
 
 import org.wildstang.framework.auto.AutoStep;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.Launcher;
-import org.wildstang.sample.subsystems.Launcher.GameState;
+import org.wildstang.sample.subsystems.Launcher.GameStates;
 import org.wildstang.framework.core.Core;
 
-public class AutoStartLauncherStep extends AutoStep{
+public class AutoStowLauncherStep extends AutoStep{
 
     Launcher launcher;
 
@@ -17,7 +17,7 @@ public class AutoStartLauncherStep extends AutoStep{
 
     @Override
     public void update() {
-        launcher.setLauncherState(GameState.STOW);
+        launcher.setLauncherState(GameStates.STOW);
     }
 
     @Override
