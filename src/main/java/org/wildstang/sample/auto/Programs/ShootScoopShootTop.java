@@ -16,43 +16,43 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import org.wildstang.sample.auto.Steps.AutoStartLauncherStep;
 import org.wildstang.sample.auto.Steps.AutoStowLauncherStep;
 
-public class ShootScoopShoot extends AutoProgram {
+public class ShootScoopShootTop extends AutoProgram {
     
     @Override
     protected void defineSteps(){
         SwerveDrive swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
-        addStep(new AutoSetupStep(3.3911373615264893, 2.5110859870910645, 0.7568339765983157 , Alliance.Blue));
+        addStep(new AutoSetupStep(3.3079943656921387,5.304169178009033, 0.7568339765983157 , Alliance.Blue));
         addStep(new AutoReadyBallpathStep());
         addStep(new AutoStartLauncherStep());
 
-        addStep(new SwerveToPointStep(swerve, new Pose2d(4.667594909667969, 2.3875575065612793 ,new Rotation2d(0))));
-        addStep(new SwerveToPointStep(swerve, new Pose2d(5.944052696228027, 2.0787370204925537,new Rotation2d(0))));
+        addStep(new SwerveToPointStep(swerve, new Pose2d(4.675332069396973, 5.355766773223877 ,new Rotation2d(0))));
+        addStep(new SwerveToPointStep(swerve, new Pose2d(5.930831432342529, 5.373841762542725,new Rotation2d(0))));
         
         AutoParallelStepGroup group1 = new AutoParallelStepGroup();
         group1.addStep(new AutoStartIntakeStep());
-        group1.addStep(new SwerveToPointStep(swerve, new Pose2d(7.17933464050293, 1.7081525325775146, new Rotation2d(0.7086266808492994 ))));
+        group1.addStep(new SwerveToPointStep(swerve, new Pose2d(6.790835380554199, 6.12973165512085, new Rotation2d(-0.4636479786588318))));
 
         addStep(group1);
 
-        addStep(new SwerveToPointStep(swerve, new Pose2d(7.591094970703125, 2.346381425857544, new Rotation2d(0.982793723247329))));
-        addStep(new SwerveToPointStep(swerve, new Pose2d(7.817563056945801, 2.7787299156188965 , new Rotation2d(2.111214975562058))));
+        addStep(new SwerveToPointStep(swerve, new Pose2d(7.642196178436279, 5.716950416564941, new Rotation2d(-1.002271880340043))));
+        addStep(new SwerveToPointStep(swerve, new Pose2d(7.771190643310547, 4.813991546630859 , new Rotation2d(-2.383710451496954 ))));
         
         AutoParallelStepGroup group2 = new AutoParallelStepGroup();
-        group2.addStep(new SwerveToPointStep(swerve, new Pose2d(6.705810070037842, 2.964022397994995, new Rotation2d(2.77761408691693))));
+        group2.addStep(new SwerveToPointStep(swerve, new Pose2d(6.9456281661987305, 4.736595153808594, new Rotation2d(2.77761408691693))));
         group2.addStep(new AutoStowLauncherStep());
 
         addStep(group2);
 
-        addStep(new SwerveToPointStep(swerve, new Pose2d(5.408764362335205,2.9022581577301025, new Rotation2d(-3.1145723565543277))));
-        addStep(new SwerveToPointStep(swerve, new Pose2d(4.026819705963135 ,2.92758846282959, new Rotation2d(-3.076467566550133))));
+        addStep(new SwerveToPointStep(swerve, new Pose2d(5.783071994781494,5.312275409698486, new Rotation2d(-3.1145723565543277))));
+        addStep(new SwerveToPointStep(swerve, new Pose2d(4.724131107330322 ,5.238395690917969, new Rotation2d(-3.076467566550133))));
 
         AutoParallelStepGroup group3 = new AutoParallelStepGroup();
         group3.addStep(new AutoReadyBallpathStep());
         group3.addStep(new AutoStartLauncherStep());
-        group3.addStep(new SwerveToPointStep(swerve, new Pose2d(2.855848789215088 , 3.0051984786987305, new Rotation2d(0.6022869468090264))));
+        group3.addStep(new SwerveToPointStep(swerve, new Pose2d(3.204798698425293, 5.101334095001, new Rotation2d(-0.6823159895151811))));
 
         addStep(group3);
-        addStep(new SwerveToPointStep(swerve, new Pose2d(2.7117323875427246 , 4.425772666931152 , new Rotation2d(0 ))));
+        addStep(new SwerveToPointStep(swerve, new Pose2d(2.91166639328002 , 4.558308124542236, new Rotation2d(-0.6435014424752783))));
 
 
     }
