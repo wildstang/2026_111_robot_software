@@ -90,7 +90,6 @@ public class SwerveDrive extends SwerveDriveTemplate {
     @Override
     public void inputUpdate(Input source) {
         
-        
         // If none of those conditions are met, return to Teleop mode
         if (rightBumper.getValue()){
             driveState = DriveType.SNAKE;
@@ -310,6 +309,8 @@ public class SwerveDrive extends SwerveDriveTemplate {
         swerveSignal.setRotLocked(headingTarget);
     }
 
+
+     
     /**
      * Resets the gyro, and sets it the input number of degrees
      * Used for starting the match at a non-0 angle

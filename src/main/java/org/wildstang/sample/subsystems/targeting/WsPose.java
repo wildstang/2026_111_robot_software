@@ -33,6 +33,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class WsPose implements Subsystem {
 
+    private DigitalInput leftBumper;//drive over bump
+
     private final double inToM = 1.0/39.37;
 
     private WsAprilTagLL left;
@@ -70,6 +72,9 @@ public class WsPose implements Subsystem {
 
     @Override
     public void inputUpdate(Input source) {
+        if(leftBumper.getValue()){
+            driverOverBump();
+        }
     }
 
     @Override
@@ -84,6 +89,8 @@ public class WsPose implements Subsystem {
 
     @Override
     public void init() {
+        leftBumper = (DigitalInput) WsInputs.DRIVER_LEFT_SHOULDER.get();
+        leftBumper.addInputListener(this);
     }
 
     @Override
@@ -176,7 +183,8 @@ public class WsPose implements Subsystem {
         return (robotSpeed * FOMConstants.CAM_CNSTANT*2) + (3*rotationSpeed);
     }
 
-     private double odometryFOM(){
+     
+    private double odometryFOM(){
 
         double robotSpeed = swerve.speedMagnitude();
         
@@ -189,6 +197,10 @@ public class WsPose implements Subsystem {
 
 
         return distanceDriven;
+    }
+
+    private driverOverBump(){
+        distanceDriven = 100000;
     }
 
     private WsAprilTagLL getBestCamera(){
