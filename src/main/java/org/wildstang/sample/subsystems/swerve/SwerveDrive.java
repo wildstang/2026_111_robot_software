@@ -281,10 +281,6 @@ public class SwerveDrive extends SwerveDriveTemplate {
 
     // Sets autonomous values from the motion profile in Driver Station relative 
     public void setAutoValues(double xVelocity, double yVelocity, double xAccel, double yAccel, Pose2d target) {
-        SmartDashboard.putNumber("Path Velocity", Math.sqrt(Math.pow(xVelocity, 2) + Math.pow(yVelocity, 2)));
-        // accel of 0 because currently not using acceleration for power since
-        horizontalPower = swerveHelper.getAutoPower(xVelocity, xAccel);
-        verticalPower = swerveHelper.getAutoPower(yVelocity, yAccel);
         targetPose = target;
     }
 

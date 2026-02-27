@@ -144,6 +144,7 @@ public class WsPose implements Subsystem {
      * Clear pose buffer
     */
     public void resetPose(Pose2d initialPose) {
+        swerve.resetTranslation(initialPose.getX(), initialPose.getY());
         estimatedPose = initialPose;
         poseBuffer.clear();
     }
