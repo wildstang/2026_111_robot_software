@@ -97,7 +97,7 @@ public class Intake implements Subsystem{
             intakeMotor.setSpeed(-0.75);
         }
         else if (direction == IntakeState.REVERSE){
-            intakeMotor.setSpeed(0.5);
+            intakeMotor.setSpeed(1.0);
         }
         else if (direction == IntakeState.SLOW){
             intakeMotor.setSpeed(-0.35);

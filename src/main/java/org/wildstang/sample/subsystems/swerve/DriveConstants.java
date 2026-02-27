@@ -41,7 +41,7 @@ public final class DriveConstants {
     public static final double DRIVE_F_I = 0.000;//
 
     //heading PID value
-    public static final double heading_P = 0.175;
+    public static final double heading_P = 0.2;
     //heading PID value
     public static final double heading_D = 0.0;
 
@@ -99,7 +99,7 @@ public final class DriveConstants {
     //find magnet offset
     private static final double BL_encoderOffset = -0.4353;
     //find magnet offset
-    private static final double BR_encoderOffset = -0.0054;
+    private static final double BR_encoderOffset = -0.3018;
 
     public static final SwerveDrivetrainConstants swerveCTREconsts = new SwerveDrivetrainConstants()
         .withCANBusName(canBus.getName()).
