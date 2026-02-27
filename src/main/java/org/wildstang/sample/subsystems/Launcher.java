@@ -22,13 +22,15 @@ public class Launcher implements Subsystem{
     private WsTalon flywheelMotor, hoodMotor;
 
     private WsJoystickAxis driverLeftTrigger, operatorRightTrigger, operatorLeftTrigger;
-    private WsDPadButton operatorDup, operatorDdown;
+    private WsDPadButton operatorDup, operatorDdown; 
+    private WsJoystickButton operatorStart;
 
 
-    private enum GameStates {SHOOT, FEED, STOW};
+    private enum GameStates {SHOOT, FEED, STOW, RESETTING};
     private GameStates currentState = GameStates.STOW;
 
     public boolean inFeedingZone;
+    private boolean resetting = false;
     private Timer shootTimer = new Timer();
 
     
@@ -70,6 +72,8 @@ public class Launcher implements Subsystem{
         operatorDup.addInputListener(this);
         operatorDdown = (WsDPadButton) WsInputs.OPERATOR_DPAD_DOWN.get();
         operatorDdown.addInputListener(this);
+        operatorStart = (WsJoystickButton) WsInputs.OPERATOR_START.get();
+        operatorStart.addInputListener(this);
 
         hoodStart = hoodMotor.getPosition();
 
@@ -78,12 +82,21 @@ public class Launcher implements Subsystem{
 
     @Override
     public void inputUpdate(Input source) {
+        if (operatorStart.getValue()){
+            resetting = true;
+            currentState = GameStates.RESETTING;
+        }
+        if (resetting && !operatorStart.getValue()){
+            resetting = false;
+            currentState = GameStates.STOW;
+            hoodStart = hoodMotor.getPosition();
+        }
        
         if(Math.abs(driverLeftTrigger.getValue()) > 0.5 || Math.abs(operatorRightTrigger.getValue()) > 0.5){
             currentState = GameStates.SHOOT;
         } else if (Math.abs(operatorLeftTrigger.getValue()) > 0.5){
             currentState = GameStates.FEED;
-        } else{
+        } else if (currentState != GameStates.RESETTING) {
             currentState = GameStates.STOW;
         }
         if (source == operatorDup && operatorDup.getValue()) flywheelModifier = flywheelModifier+1.0;
@@ -114,10 +127,14 @@ public class Launcher implements Subsystem{
                 if (pose.inAllianceZone()) hoodPos = pose.getHoodShootPosition();
                 else hoodPos = HOODMAX;
                 break;
+            case RESETTING:
+                flywheelVel = 0;
+                hoodMotor.setSpeed(-0.1);
+                break;
         }
         if (flywheelVel != 0.0) flywheelMotor.setVelocity(flywheelVel+flywheelModifier);
         else flywheelMotor.setSpeed(0);
-        setHood(hoodPos);
+        if (currentState != GameStates.RESETTING) setHood(hoodPos);
         flywheelActual = flywheelMotor.getVelocity();
         hoodActual = hoodMotor.getPosition() - hoodStart;
         SmartDashboard.putString("Launcher state", currentState.toString());
