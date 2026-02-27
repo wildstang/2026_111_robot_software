@@ -1,4 +1,4 @@
-package main.java.org.wildstang.sample.auto.Programs;
+package org.wildstang.sample.auto.Programs;
 import org.wildstang.framework.auto.AutoProgram;
 import org.wildstang.framework.auto.AutoStep;
 import org.wildstang.framework.auto.steps.AutoParallelStepGroup;

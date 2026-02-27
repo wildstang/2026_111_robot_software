@@ -1,4 +1,4 @@
-package main.java.org.wildstang.sample.auto.Programs;
+package org.wildstang.sample.auto.Programs;
 import org.wildstang.framework.auto.AutoProgram;
 import org.wildstang.framework.auto.AutoStep;
 import org.wildstang.framework.auto.steps.AutoParallelStepGroup;
@@ -60,7 +60,7 @@ public class ShootScoopShootTop extends AutoProgram {
     @Override
     public String toString() {
         // TODO Auto-generated method stub
-        return "Shoot Scoop Shoot";
+        return "Shoot Scoop Shoot Top";
     }
     
 

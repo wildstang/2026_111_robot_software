@@ -2,6 +2,7 @@ package org.wildstang.sample.subsystems.targeting;
 
 // ton of imports
 import org.wildstang.framework.subsystems.Subsystem;
+import org.wildstang.sample.robot.WsInputs;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.Launcher;
 import org.wildstang.sample.subsystems.Turret;
@@ -14,7 +15,7 @@ import java.util.Optional;
 import java.util.Vector;
 
 import org.wildstang.framework.core.Core;
-
+import org.wildstang.framework.io.inputs.DigitalInput;
 import org.wildstang.framework.io.inputs.Input;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -199,7 +200,7 @@ public class WsPose implements Subsystem {
         return distanceDriven;
     }
 
-    private driverOverBump(){
+    private void driverOverBump(){
         distanceDriven = 100000;
     }
 
