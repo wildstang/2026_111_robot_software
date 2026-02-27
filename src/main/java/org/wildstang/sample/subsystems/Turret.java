@@ -132,7 +132,7 @@ public class Turret implements Subsystem{
         // if (desiredTurretAngle > 240) return false;
         //good
         double wiggle = Math.abs(rotateTurret()*43.5/360+turretStart - turretMotor.getPosition());
-        return wiggle < 1.0;
+        return wiggle < 0.5;
     }
     public boolean keepFiring(){
         if ((actualAngle < 30 && turretPos>turretStart+(330*43.5/360)) || 

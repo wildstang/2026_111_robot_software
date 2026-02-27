@@ -134,10 +134,10 @@ public class SwerveDrive extends SwerveDriveTemplate {
             else swerveSignal.setRotLocked(270);
         }
         if (leftBumper.getValue()){
-            if (getGyroAngle()<90) swerveSignal.setRotLocked(50);
-            else if (getGyroAngle() < 180) swerveSignal.setRotLocked(130);
-            else if (getGyroAngle() < 270) swerveSignal.setRotLocked(230);
-            else swerveSignal.setRotLocked(310);
+            if (getGyroAngle()<90) swerveSignal.setRotLocked(40.9);
+            else if (getGyroAngle() < 180) swerveSignal.setRotLocked(139.1);
+            else if (getGyroAngle() < 270) swerveSignal.setRotLocked(220.9);
+            else swerveSignal.setRotLocked(319.1);
         }
 
         //get rotational joystick

@@ -9,6 +9,7 @@ import org.wildstang.hardware.roborio.outputs.WsTalon;
 import org.wildstang.sample.robot.WsInputs;
 import org.wildstang.sample.robot.WsOutputs;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Intake implements Subsystem{
@@ -30,6 +31,8 @@ public class Intake implements Subsystem{
     private DeployState deploy = DeployState.OUT;
     private IntakeState direction = IntakeState.NEUTRAL;
     private double deployStart;
+
+    private Timer stowTimer = new Timer();
 
 
     @Override
@@ -85,6 +88,8 @@ public class Intake implements Subsystem{
         operatorB.addInputListener(this);
         operatorY = (WsJoystickButton) WsInputs.OPERATOR_FACE_UP.get();
         operatorY.addInputListener(this);
+
+        stowTimer.start();
     }
 
     @Override
@@ -108,20 +113,23 @@ public class Intake implements Subsystem{
         
         if(deploy == DeployState.IN){
             deployMotor.setPosition(deployStart);
+            stowTimer.reset();
         }
         if(deploy == DeployState.OUT){
             // if (Math.abs(deployMotor.getPosition()-(deployStart+2.45))>0.05) deployMotor.setSpeed(0.1);
             // else deployMotor.setSpeed(0);
             deployMotor.setPosition(deployStart+2.45, 0);
+            stowTimer.reset();
         }
         if(deploy == DeployState.STOWED){
             // if (Math.abs(deployMotor.getPosition()-(deployStart+2.45))>0.05) deployMotor.setSpeed(0.1);
             // else deployMotor.setSpeed(0);
-            deployMotor.setPosition(deployStart+0.85, 0);
+            deployMotor.setPosition(Math.max(deployStart, deployStart+0.85-0.45*stowTimer.get()), 0);
         }
         if (deploy == DeployState.INTAKING){
             if (deployMotor.getPosition() < deployStart+2.4) deployMotor.setSpeed(0.5);
             else deployMotor.setSpeed(0.1);
+            stowTimer.reset();
         }
         SmartDashboard.putNumber("Intake Deploy position", deployMotor.getPosition());
         SmartDashboard.putNumber("Intake target", deploy != DeployState.IN ? deployStart+2.45 : deployStart);

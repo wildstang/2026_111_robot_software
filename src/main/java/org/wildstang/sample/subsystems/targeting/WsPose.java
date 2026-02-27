@@ -265,7 +265,7 @@ public class WsPose implements Subsystem {
             // }
 
         } else {
-             if(estimatedPose.getY() <= 170*inToM && estimatedPose.getY() >= 130*inToM){
+             if(estimatedPose.getY() <= 185*inToM && estimatedPose.getY() >= 130*inToM){
                 //behind the hub
                 return false;
             }                

@@ -3,6 +3,7 @@ package org.wildstang.sample.subsystems;
 import org.wildstang.framework.core.Core;
 import org.wildstang.framework.io.inputs.Input;
 import org.wildstang.framework.subsystems.Subsystem;
+import org.wildstang.hardware.roborio.inputs.WsDPadButton;
 import org.wildstang.hardware.roborio.inputs.WsJoystickAxis;
 import org.wildstang.hardware.roborio.inputs.WsJoystickButton;
 import org.wildstang.hardware.roborio.outputs.WsTalon;
@@ -21,6 +22,7 @@ public class Launcher implements Subsystem{
     private WsTalon flywheelMotor, hoodMotor;
 
     private WsJoystickAxis driverLeftTrigger, operatorRightTrigger, operatorLeftTrigger;
+    private WsDPadButton operatorDup, operatorDdown;
 
 
     private enum GameStates {SHOOT, FEED, STOW};
@@ -33,6 +35,7 @@ public class Launcher implements Subsystem{
     /* Flywheel Stuff */
     private double flywheelVel = 0.0;
     private double flywheelActual = 0.0;
+    private double flywheelModifier = 0;
     private final double flywheelTolerance = 1.0;
 
 
@@ -63,6 +66,11 @@ public class Launcher implements Subsystem{
         operatorLeftTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.OPERATOR_LEFT_TRIGGER);
         operatorLeftTrigger.addInputListener(this);
 
+        operatorDup = (WsDPadButton) WsInputs.OPERATOR_DPAD_UP.get();
+        operatorDup.addInputListener(this);
+        operatorDdown = (WsDPadButton) WsInputs.OPERATOR_DPAD_DOWN.get();
+        operatorDdown.addInputListener(this);
+
         hoodStart = hoodMotor.getPosition();
 
         shootTimer.start();
@@ -78,6 +86,8 @@ public class Launcher implements Subsystem{
         } else{
             currentState = GameStates.STOW;
         }
+        if (source == operatorDup && operatorDup.getValue()) flywheelModifier = flywheelModifier+1.0;
+        if (source == operatorDdown && operatorDdown.getValue()) flywheelModifier = flywheelModifier-1.0;
 
     }
 
@@ -105,7 +115,7 @@ public class Launcher implements Subsystem{
                 else hoodPos = HOODMAX;
                 break;
         }
-        if (flywheelVel != 0.0) flywheelMotor.setVelocity(flywheelVel);
+        if (flywheelVel != 0.0) flywheelMotor.setVelocity(flywheelVel+flywheelModifier);
         else flywheelMotor.setSpeed(0);
         setHood(hoodPos);
         flywheelActual = flywheelMotor.getVelocity();
@@ -116,13 +126,14 @@ public class Launcher implements Subsystem{
         SmartDashboard.putNumber("Launcher hood pos", hoodActual);
         SmartDashboard.putNumber("Launcher hood target", hoodPos);
         SmartDashboard.putBoolean("Launcher ready to fire", goodToFire());
+        SmartDashboard.putNumber("Launcher modifier", flywheelModifier);
     }
 
     public boolean goodToFire(){
 
         if (flywheelVel == 0.0) return false;
         if (Math.abs(hoodPos - hoodActual) > hoodTolerance) return false;
-        if (Math.abs(flywheelVel - flywheelActual) > flywheelTolerance) return false;
+        if (Math.abs((flywheelVel+flywheelModifier) - flywheelActual) > flywheelTolerance) return false;
         return true;
         
     }
