@@ -26,7 +26,7 @@ public class Launcher implements Subsystem{
     private WsJoystickButton operatorStart;
 
 
-    private enum GameStates {SHOOT, FEED, STOW, RESETTING};
+    public enum GameStates {SHOOT, FEED, STOW, RESETTING};
     private GameStates currentState = GameStates.STOW;
 
     public boolean inFeedingZone;
