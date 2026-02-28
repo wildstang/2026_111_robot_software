@@ -286,6 +286,7 @@ public class WsPose implements Subsystem {
      * Clear pose buffer
     */
     public void resetPose(Pose2d initialPose) {
+        swerve.resetTranslation(initialPose.getX(), initialPose.getY());
         estimatedPose = initialPose;
         poseBuffer.clear();
     }
@@ -409,7 +410,7 @@ public class WsPose implements Subsystem {
             // }
 
         } else {
-             if(estimatedPose.getY() <= 170*inToM && estimatedPose.getY() >= 130*inToM){
+             if(estimatedPose.getY() <= 185*inToM && estimatedPose.getY() >= 130*inToM){
                 //behind the hub
                 return false;
             }                

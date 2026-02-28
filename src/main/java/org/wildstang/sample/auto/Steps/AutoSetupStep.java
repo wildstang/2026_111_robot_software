@@ -28,8 +28,14 @@ public class AutoSetupStep extends AutoStep{
      * @param alliance // Set alliance in Core
      */
     public AutoSetupStep(double x, double y, double pathHeading, Alliance alliance){
-        odoPose = new Pose2d(x,y, Rotation2d.fromDegrees(360 - pathHeading));
+        odoPose = new Pose2d(x,y, Rotation2d.fromDegrees(pathHeading));
         heading = pathHeading;
+        Core.setAlliance(alliance);
+        LedController led = (LedController) Core.getSubsystemManager().getSubsystem(WsSubsystems.LED);
+    }
+    public AutoSetupStep(Pose2d startingPose, Alliance alliance){
+        odoPose = startingPose;
+        heading = startingPose.getRotation().getDegrees();
         Core.setAlliance(alliance);
         LedController led = (LedController) Core.getSubsystemManager().getSubsystem(WsSubsystems.LED);
     }
@@ -47,7 +53,7 @@ public class AutoSetupStep extends AutoStep{
         swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
         pose = (WsPose) Core.getSubsystemManager().getSubsystem(WsSubsystems.WS_POSE);
         led = (LedController) Core.getSubsystemManager().getSubsystem(WsSubsystems.LED);
-        swerve.setAutoValues(0,0,0, 0, odoPose);
+        swerve.setAutoValues(odoPose);
         swerve.setAutoHeading(heading);
         swerve.setGyro(heading);
     }

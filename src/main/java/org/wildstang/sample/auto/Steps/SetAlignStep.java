@@ -15,7 +15,7 @@ public class SetAlignStep extends AutoStep{
     private double heading;
 
     public SetAlignStep(double x, double y, double heading){
-        odoPose = new Pose2d(x,y, Rotation2d.fromDegrees(360 - heading));
+        odoPose = new Pose2d(x,y, Rotation2d.fromDegrees(heading));
         this.heading = heading;
     }
 

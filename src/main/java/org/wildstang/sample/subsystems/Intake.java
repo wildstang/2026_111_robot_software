@@ -9,6 +9,7 @@ import org.wildstang.hardware.roborio.outputs.WsTalon;
 import org.wildstang.sample.robot.WsInputs;
 import org.wildstang.sample.robot.WsOutputs;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Intake implements Subsystem{
@@ -22,18 +23,31 @@ public class Intake implements Subsystem{
     private WsJoystickButton operatorX;
     private WsJoystickButton operatorB;
     private WsJoystickButton operatorY;
+    private WsJoystickButton operatorStart;
 
     private WsTalon intakeMotor, deployMotor;
 
-    public enum DeployState {IN, OUT, INTAKING, STOWED};
+    public enum DeployState {IN, OUT, INTAKING, STOWED, RESETTING};
     public enum IntakeState {INTAKING, NEUTRAL, REVERSE, SLOW};
     private DeployState deploy = DeployState.OUT;
     private IntakeState direction = IntakeState.NEUTRAL;
     private double deployStart;
+    private boolean resetting = false;
+
+    private Timer stowTimer = new Timer();
 
 
     @Override
     public void inputUpdate(Input source) {
+        if (operatorStart.getValue()) {
+            resetting = true;
+            deploy = DeployState.RESETTING;
+        }
+        if (!operatorStart.getValue() && resetting){
+            resetting = false;
+            deployStart = deployMotor.getPosition();
+            deploy = DeployState.OUT;
+        }
         if(Math.abs(rightTrigger.getValue()) > 0.5 || rightShoulder.getValue()){
             direction = IntakeState.INTAKING;
         } else if((Math.abs(leftTrigger.getValue()) > 0.5 || Math.abs(operatorLeftTrigger.getValue()) > 0.5 ||
@@ -52,7 +66,7 @@ public class Intake implements Subsystem{
        } else if (Math.abs(leftTrigger.getValue()) > 0.5 || Math.abs(operatorLeftTrigger.getValue()) > 0.5 || 
                 operatorY.getValue() || Math.abs(operatorRightTrigger.getValue()) > 0.5){
             deploy = DeployState.STOWED;
-       } else {
+       } else if (deploy != DeployState.RESETTING) {
             deploy = DeployState.OUT;
        }
     }
@@ -85,6 +99,10 @@ public class Intake implements Subsystem{
         operatorB.addInputListener(this);
         operatorY = (WsJoystickButton) WsInputs.OPERATOR_FACE_UP.get();
         operatorY.addInputListener(this);
+        operatorStart = (WsJoystickButton) WsInputs.OPERATOR_START.get();
+        operatorStart.addInputListener(this);
+
+        stowTimer.start();
     }
 
     @Override
@@ -108,20 +126,26 @@ public class Intake implements Subsystem{
         
         if(deploy == DeployState.IN){
             deployMotor.setPosition(deployStart);
+            stowTimer.reset();
         }
         if(deploy == DeployState.OUT){
             // if (Math.abs(deployMotor.getPosition()-(deployStart+2.45))>0.05) deployMotor.setSpeed(0.1);
             // else deployMotor.setSpeed(0);
             deployMotor.setPosition(deployStart+2.45, 0);
+            stowTimer.reset();
         }
         if(deploy == DeployState.STOWED){
             // if (Math.abs(deployMotor.getPosition()-(deployStart+2.45))>0.05) deployMotor.setSpeed(0.1);
             // else deployMotor.setSpeed(0);
-            deployMotor.setPosition(deployStart+0.85, 0);
+            deployMotor.setPosition(Math.max(deployStart, deployStart+0.85-0.45*stowTimer.get()), 0);
         }
         if (deploy == DeployState.INTAKING){
             if (deployMotor.getPosition() < deployStart+2.4) deployMotor.setSpeed(0.5);
             else deployMotor.setSpeed(0.1);
+            stowTimer.reset();
+        }
+        if (deploy == DeployState.RESETTING){
+            deployMotor.setSpeed(-0.5);
         }
         SmartDashboard.putNumber("Intake Deploy position", deployMotor.getPosition());
         SmartDashboard.putNumber("Intake target", deploy != DeployState.IN ? deployStart+2.45 : deployStart);

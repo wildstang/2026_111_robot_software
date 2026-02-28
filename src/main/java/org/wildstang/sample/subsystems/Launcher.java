@@ -3,6 +3,7 @@ package org.wildstang.sample.subsystems;
 import org.wildstang.framework.core.Core;
 import org.wildstang.framework.io.inputs.Input;
 import org.wildstang.framework.subsystems.Subsystem;
+import org.wildstang.hardware.roborio.inputs.WsDPadButton;
 import org.wildstang.hardware.roborio.inputs.WsJoystickAxis;
 import org.wildstang.hardware.roborio.inputs.WsJoystickButton;
 import org.wildstang.hardware.roborio.outputs.WsTalon;
@@ -21,18 +22,22 @@ public class Launcher implements Subsystem{
     private WsTalon flywheelMotor, hoodMotor;
 
     private WsJoystickAxis driverLeftTrigger, operatorRightTrigger, operatorLeftTrigger;
+    private WsDPadButton operatorDup, operatorDdown; 
+    private WsJoystickButton operatorStart;
 
 
-    public enum GameStates {SHOOT, FEED, STOW};
+    private enum GameStates {SHOOT, FEED, STOW, RESETTING};
     private GameStates currentState = GameStates.STOW;
 
     public boolean inFeedingZone;
+    private boolean resetting = false;
     private Timer shootTimer = new Timer();
 
     
     /* Flywheel Stuff */
     private double flywheelVel = 0.0;
     private double flywheelActual = 0.0;
+    private double flywheelModifier = 0;
     private final double flywheelTolerance = 1.0;
 
 
@@ -63,6 +68,13 @@ public class Launcher implements Subsystem{
         operatorLeftTrigger = (WsJoystickAxis) Core.getInputManager().getInput(WsInputs.OPERATOR_LEFT_TRIGGER);
         operatorLeftTrigger.addInputListener(this);
 
+        operatorDup = (WsDPadButton) WsInputs.OPERATOR_DPAD_UP.get();
+        operatorDup.addInputListener(this);
+        operatorDdown = (WsDPadButton) WsInputs.OPERATOR_DPAD_DOWN.get();
+        operatorDdown.addInputListener(this);
+        operatorStart = (WsJoystickButton) WsInputs.OPERATOR_START.get();
+        operatorStart.addInputListener(this);
+
         hoodStart = hoodMotor.getPosition();
 
         shootTimer.start();
@@ -70,14 +82,25 @@ public class Launcher implements Subsystem{
 
     @Override
     public void inputUpdate(Input source) {
+        if (operatorStart.getValue()){
+            resetting = true;
+            currentState = GameStates.RESETTING;
+        }
+        if (resetting && !operatorStart.getValue()){
+            resetting = false;
+            currentState = GameStates.STOW;
+            hoodStart = hoodMotor.getPosition();
+        }
        
         if(Math.abs(driverLeftTrigger.getValue()) > 0.5 || Math.abs(operatorRightTrigger.getValue()) > 0.5){
             currentState = GameStates.SHOOT;
         } else if (Math.abs(operatorLeftTrigger.getValue()) > 0.5){
             currentState = GameStates.FEED;
-        } else{
+        } else if (currentState != GameStates.RESETTING) {
             currentState = GameStates.STOW;
         }
+        if (source == operatorDup && operatorDup.getValue()) flywheelModifier = flywheelModifier+1.0;
+        if (source == operatorDdown && operatorDdown.getValue()) flywheelModifier = flywheelModifier-1.0;
 
     }
 
@@ -104,10 +127,14 @@ public class Launcher implements Subsystem{
                 if (pose.inAllianceZone()) hoodPos = pose.getHoodShootPosition();
                 else hoodPos = HOODMAX;
                 break;
+            case RESETTING:
+                flywheelVel = 0;
+                hoodMotor.setSpeed(-0.1);
+                break;
         }
-        if (flywheelVel != 0.0) flywheelMotor.setVelocity(flywheelVel);
+        if (flywheelVel != 0.0) flywheelMotor.setVelocity(flywheelVel+flywheelModifier);
         else flywheelMotor.setSpeed(0);
-        setHood(hoodPos);
+        if (currentState != GameStates.RESETTING) setHood(hoodPos);
         flywheelActual = flywheelMotor.getVelocity();
         hoodActual = hoodMotor.getPosition() - hoodStart;
         SmartDashboard.putString("Launcher state", currentState.toString());
@@ -116,13 +143,14 @@ public class Launcher implements Subsystem{
         SmartDashboard.putNumber("Launcher hood pos", hoodActual);
         SmartDashboard.putNumber("Launcher hood target", hoodPos);
         SmartDashboard.putBoolean("Launcher ready to fire", goodToFire());
+        SmartDashboard.putNumber("Launcher modifier", flywheelModifier);
     }
 
     public boolean goodToFire(){
 
         if (flywheelVel == 0.0) return false;
         if (Math.abs(hoodPos - hoodActual) > hoodTolerance) return false;
-        if (Math.abs(flywheelVel - flywheelActual) > flywheelTolerance) return false;
+        if (Math.abs((flywheelVel+flywheelModifier) - flywheelActual) > flywheelTolerance) return false;
         return true;
         
     }
