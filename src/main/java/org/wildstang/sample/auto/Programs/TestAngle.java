@@ -11,20 +11,20 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
-public class SampleAutoProgram extends AutoProgram{
+public class TestAngle extends AutoProgram{
 
     SwerveDrive swerve;
 
     @Override
     protected void defineSteps() {
         swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
-        addStep(new AutoSetupStep(new Pose2d(0, 0, new Rotation2d(0)), Alliance.Blue));
+        addStep(new AutoSetupStep(new Pose2d(0, 0, new Rotation2d(Math.toRadians(40.9))), Alliance.Blue));
         addStep((new SwerveToPointStep(swerve, new Pose2d(50.0/39.37, 0.0, new Rotation2d(0)), 0.5)));
     }
 
     @Override
     public String toString() {
-        return "Sample";
+        return "Test Angle";
     }
     
 }
