@@ -22,6 +22,7 @@ public class AutoStopBallpathStep extends AutoStep{
         @Override
         public void update() {
             ballpath.setBallpathState(GameState.STOP);
+            setFinished();
     }
 
     @Override

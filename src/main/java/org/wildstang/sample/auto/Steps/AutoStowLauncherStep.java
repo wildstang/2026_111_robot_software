@@ -18,6 +18,7 @@ public class AutoStowLauncherStep extends AutoStep{
     @Override
     public void update() {
         launcher.setLauncherState(GameStates.STOW);
+        setFinished();
     }
 
     @Override

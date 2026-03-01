@@ -18,6 +18,7 @@ public class AutoStartLauncherStep extends AutoStep{
     @Override
     public void update() {
         launcher.setLauncherState(GameStates.SHOOT);
+        setFinished();
     }
 
     @Override

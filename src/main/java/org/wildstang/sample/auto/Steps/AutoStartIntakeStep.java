@@ -20,6 +20,7 @@ public class AutoStartIntakeStep extends AutoStep{
     public void update() {
         intake.setDeployState(DeployState.OUT);
         intake.setIntakeState(IntakeState.INTAKING);
+        setFinished();
     }
 
     @Override

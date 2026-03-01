@@ -21,6 +21,7 @@ public class AutoRetractIntakeStep extends AutoStep{
     public void update() {
         intake.setIntakeState(IntakeState.NEUTRAL);
         intake.setDeployState(DeployState.IN);
+        setFinished();
     }
 
     @Override

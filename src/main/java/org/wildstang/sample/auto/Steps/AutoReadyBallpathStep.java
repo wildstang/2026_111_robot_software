@@ -21,6 +21,7 @@ public class AutoReadyBallpathStep extends AutoStep{
         @Override
         public void update() {
             ballpath.setBallpathState(GameState.READYING);
+            setFinished();
     }
 
     @Override
