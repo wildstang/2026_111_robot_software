@@ -200,7 +200,7 @@ public class WsPose implements Subsystem {
         return distanceDriven;
     }
 
-    private void driverOverBump(){
+    public void driverOverBump(){
         distanceDriven = 100000;
     }
 
