@@ -20,6 +20,7 @@ public class SwerveSignal {
     private double rotationSpeed = 0;
     private double rotationTarget = 0;
     private Pose2d drivingPose = new Pose2d();
+    private Pose2d currentPose = new Pose2d();
     private double autoMaxSpeed = 1.0;
     public enum controlState {MANUAL, ROTLOCKED, SNAKE, DRIVETOPOINT, X_DRIVETOPOINT, Y_DRIVETOPOINT}
     private controlState state = controlState.MANUAL;
@@ -29,7 +30,10 @@ public class SwerveSignal {
     private SwerveRequest.FieldCentricFacingAngle driveLockedCommand = new SwerveRequest.FieldCentricFacingAngle()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
         .withSteerRequestType(SteerRequestType.Position);
-    private TranslationRequest translationRequest = new TranslationRequest();
+    // private TranslationRequest translationRequest = new TranslationRequest();
+    private SwerveRequest.FieldCentricFacingAngle translationRequest = new SwerveRequest.FieldCentricFacingAngle()
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+        .withSteerRequestType(SteerRequestType.Position);
     private XTranslationRequest xTranslationRequest = new XTranslationRequest();
     private YTranslationRequest yTranslationRequest = new YTranslationRequest();    
 
@@ -54,8 +58,20 @@ public class SwerveSignal {
                 .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withTargetDirection(new Rotation2d(Math.toRadians(getRotTarget())));
         } else if (state == controlState.DRIVETOPOINT){
-            translationRequest.setTarget(getDriveToPoint(), autoMaxSpeed);
-            return translationRequest;
+            // translationRequest.setTarget(getDriveToPoint(), autoMaxSpeed);
+            double velX = DriveConstants.ALIGN_P * DriveConstants.maxSpeed.in(MetersPerSecond) * 
+                (getDriveToPoint().getX() - currentPose.getX());
+            if (Math.abs(velX) > autoMaxSpeed * DriveConstants.maxSpeed.in(MetersPerSecond)){
+                velX = Math.signum(velX) * autoMaxSpeed * DriveConstants.maxSpeed.in(MetersPerSecond);
+            }
+            double velY = DriveConstants.ALIGN_P * DriveConstants.maxSpeed.in(MetersPerSecond) *
+                (getDriveToPoint().getY() - currentPose.getY());
+            if (Math.abs(velY) > autoMaxSpeed * DriveConstants.maxSpeed.in(MetersPerSecond)){
+                velX = Math.signum(velY) * autoMaxSpeed * DriveConstants.maxSpeed.in(MetersPerSecond);
+            }
+            return translationRequest.withVelocityX(velX)
+            .withVelocityY(velY)
+            .withTargetDirection(getDriveToPoint().getRotation());
         } else if (state == controlState.X_DRIVETOPOINT){
             xTranslationRequest.setTarget(getDriveToPoint(), getHorizontal());
             return xTranslationRequest;
@@ -74,6 +90,8 @@ public class SwerveSignal {
         this.rotationSpeed = rot;
         driveLockedCommand.HeadingController = new PhoenixPIDController(DriveConstants.heading_P, 0.0, DriveConstants.heading_D);
         driveLockedCommand.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
+        translationRequest.HeadingController = new PhoenixPIDController(DriveConstants.heading_P, 0.0, DriveConstants.heading_D);
+        translationRequest.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
     }
     public void setTranslation(double hori, double vert){
         this.verticalSpeed = vert;
@@ -97,11 +115,12 @@ public class SwerveSignal {
         state = controlState.DRIVETOPOINT;
         autoMaxSpeed = 1.0;
     }
-    public void setDriveToPoint(Pose2d newTarget, double maxSpeed){
+    public void setDriveToPoint(Pose2d newTarget, double maxSpeed, Pose2d currentPose){
         drivingPose = newTarget;
         rotationTarget = newTarget.getRotation().getDegrees();
         state = controlState.DRIVETOPOINT;
         autoMaxSpeed = maxSpeed;
+        this.currentPose = currentPose;
     }
     public void setXDriveToPoint(double hori, Pose2d newTarget){
         this.horizontalSpeed = hori;

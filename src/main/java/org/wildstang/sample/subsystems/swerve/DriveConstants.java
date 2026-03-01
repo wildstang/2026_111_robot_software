@@ -83,7 +83,7 @@ public final class DriveConstants {
     //steer gear ratio
     private static final double steerRatio = 12.1;
     //empirically find this, 2910 had 1.95
-    private static final double wheelRadius = 1.95/39.37;
+    private static final double wheelRadius = 1.95/39.37*59.0/50.0;
     private static final boolean invertLeft = false;
     private static final boolean invertRight = true;
     //width to center of wheel

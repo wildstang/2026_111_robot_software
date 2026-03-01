@@ -59,8 +59,11 @@ public class SwerveMultiPointStep extends AutoStep {
     @Override
     public void update() {
 
-        swerve.setAutoValues(new Pose2d(poses[index].getTranslation(), swerve.odoAngle()), speed[index]);
-
+        if (timer.hasElapsed(turnStartTime)) {
+            swerve.setAutoValues(poses[index], speed[index]);
+        } else {
+            swerve.setAutoValues(new Pose2d(poses[index].getTranslation(), swerve.odoAngle()), speed[index]);
+        }
         // Drive to intermediate point
         if (index < poses.length - 1) {
             swerve.usePID(false);
@@ -75,11 +78,7 @@ public class SwerveMultiPointStep extends AutoStep {
             }
             swerve.usePID(true);
         }
-        if (timer.hasElapsed(turnStartTime)) {
-            swerve.setAutoValues(poses[index]);
-        } else {
-            swerve.setAutoValues(new Pose2d(poses[index].getTranslation(), swerve.odoAngle()));
-        }
+        
     }
 
     @Override

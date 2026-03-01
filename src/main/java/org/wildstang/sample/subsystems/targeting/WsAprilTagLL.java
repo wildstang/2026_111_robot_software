@@ -66,11 +66,11 @@ public class WsAprilTagLL {
         // PoseEstimate red3D = LimelightHelpers.getBotPoseEstimate_wpiRed_MegaTag2(CameraID);
         alliance3D = Core.isBlue() ? LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(CameraID) :
             LimelightHelpers.getBotPoseEstimate_wpiRed_MegaTag2(CameraID);
-        boolean newEstimate = alliance3D != null ? (alliance3D.timestampSeconds != oldTimestamp) : false;
+        //boolean newEstimate = alliance3D != null ? (alliance3D.timestampSeconds != oldTimestamp) : false;
         
 
         // Logger.processInputs("Vision/Camera/" + CameraID, this);
-        if (newEstimate & tv) {
+        if (tv) {
             posePublisher.set(alliance3D.pose);
             return Optional.of(alliance3D);
         } else {

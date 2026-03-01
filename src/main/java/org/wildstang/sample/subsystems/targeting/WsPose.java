@@ -213,12 +213,12 @@ public class WsPose implements Subsystem {
         Optional<PoseEstimate> leftEstimate = left.update(); 
         Optional<PoseEstimate> rightEstimate = right.update();
         
+       SmartDashboard.putBoolean("sees right estimate?", rightEstimate.isPresent());
         //checking if any of the camera poses are null
        if(!leftEstimate.isPresent() && !rightEstimate.isPresent()){
            return null;
        }
 
-       SmartDashboard.putBoolean("sees right estimate?", rightEstimate.isPresent());
         if(!leftEstimate.isPresent() && rightEstimate.isPresent()){
             SmartDashboard.putNumber("Priority tag",1);
             return right;
@@ -263,7 +263,7 @@ public class WsPose implements Subsystem {
                     return right;
                 } 
     
-        return null;
+        return left;
 
 
     }

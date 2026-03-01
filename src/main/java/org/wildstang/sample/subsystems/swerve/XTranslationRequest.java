@@ -17,7 +17,7 @@ public class XTranslationRequest implements SwerveRequest{
 
     private final FieldCentricFacingAngle request = new FieldCentricFacingAngle()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-        .withSteerRequestType(SteerRequestType.MotionMagicExpo);
+        .withSteerRequestType(SteerRequestType.Position);
     public Pose2d targetPose = new Pose2d();
     public double yPower = 0;
 

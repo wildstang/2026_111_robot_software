@@ -79,7 +79,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
     private double swerveGyro;
     private WsPose pose;
 
-    private Pose2d targetPose;
+    private Pose2d targetPose = new Pose2d();
     StructPublisher<Pose2d> targetPosePublisher = 
         NetworkTableInstance.getDefault().getStructTopic("targetPose", Pose2d.struct).publish();
 
@@ -223,7 +223,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
             this.swerveSignal.setSnake(verticalPower, horizontalPower); 
         } else if (driveState == DriveType.AUTO) {
             if (Math.abs(swerve.getPigeon2().getRoll().getValueAsDouble()) >6.0 || Math.abs(swerve.getPigeon2().getPitch().getValueAsDouble())>6.0) pose.driverOverBump();
-            swerveSignal.setDriveToPoint(targetPose, autoMaxSpeed);
+            swerveSignal.setDriveToPoint(targetPose, autoMaxSpeed, swervePose);
         }
             
         swerve.setControl(swerveSignal.drive());
@@ -243,9 +243,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
             + speeds().vyMetersPerSecond*Math.sin(Math.toRadians(90 + getGyroAngle()));
         SmartDashboard.putNumber("SOTM speed x", robotVelx);
         SmartDashboard.putNumber("SOTM speed y", robotVely);
-        if (targetPose != null){
-            targetPosePublisher.set(targetPose);
-        }
+        targetPosePublisher.set(targetPose);
         moduleStatePublisher.set(moduleStates());
         moduleIdealPublisher.set(modulesStatesSim());
     }

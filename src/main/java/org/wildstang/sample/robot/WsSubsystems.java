@@ -22,7 +22,7 @@ public enum WsSubsystems implements Subsystems {
     LED("Led Controller", LedController.class),
     INTAKE("Intake", Intake.class),
     BALLPATH("Ballpath", Ballpath.class),
-    CLIMB("Climb", Climb.class),
+    //CLIMB("Climb", Climb.class),
     LAUNCHER("Launcher", Launcher.class),
     TURRET("Turret", Turret.class)
     ;
