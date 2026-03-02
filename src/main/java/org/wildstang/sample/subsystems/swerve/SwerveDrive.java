@@ -223,6 +223,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
             this.swerveSignal.setSnake(verticalPower, horizontalPower); 
         } else if (driveState == DriveType.AUTO) {
             if (Math.abs(swerve.getPigeon2().getRoll().getValueAsDouble()) >6.0 || Math.abs(swerve.getPigeon2().getPitch().getValueAsDouble())>6.0) pose.driverOverBump();
+            pose.driverOverBump();
             swerveSignal.setDriveToPoint(targetPose, autoMaxSpeed, swervePose);
         }
             

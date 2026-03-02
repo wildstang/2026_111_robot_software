@@ -28,4 +28,9 @@ public final class AutoPos {
 
     public static final Pose2d highPreDepot = new Pose2d(0.5, 7.4, new Rotation2d(Math.toRadians(260)));
     public static final Pose2d highPostDepot = new Pose2d(0.5, 6.1, new Rotation2d(Math.toRadians(260)));
+
+    public static final Pose2d highJumpToNeutral = new Pose2d(10.0, 5.68, new Rotation2d(319.1));
+    public static final Pose2d highJumpToAlliance = new Pose2d(0.0, 5.68, new Rotation2d(319.1));
+    public static final Pose2d lowJumpToNeutral = new Pose2d(10.0, 2.4, new Rotation2d(40.9));
+    public static final Pose2d lowJumpToAlliance = new Pose2d(0.0, 2.4, new Rotation2d(40.9));
 }
