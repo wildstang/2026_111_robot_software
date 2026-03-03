@@ -143,15 +143,18 @@ public class WsPose implements Subsystem {
             SmartDashboard.putNumber("Camera FOM", camFOM);
             SmartDashboard.putNumber("Best StdDev", bestStdDev);
 
-            if(camFOM > odFOM){
-          
-                SmartDashboard.putString("Has Reset", "False");
-                
-            }else if (camFOM <= odFOM){
+            if (camFOM <= odFOM) {
                 addVisionObservation(bestEstimate, 1/bestStdDev);
 
                 distanceDriven = camFOM;
                 SmartDashboard.putString("Has Reset", "True");
+            } else if (camFOM <= odFOM+0.2){
+                addVisionObservation(bestEstimate, 1/bestStdDev);
+                SmartDashboard.putString("HasReset", "True");
+            } else if(camFOM > odFOM){
+          
+                SmartDashboard.putString("Has Reset", "False");
+                
             }
         }
 

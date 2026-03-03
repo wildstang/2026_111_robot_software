@@ -27,9 +27,9 @@ public class LedController implements Subsystem {
     private CANdle led;
     private CANdleConfiguration config = new CANdleConfiguration();
 
-    private RainbowAnimation rainbow = new RainbowAnimation(0, 30);
-    private SingleFadeAnimation fade = new SingleFadeAnimation(0, 30);
-    private SolidColor color = new SolidColor(0, 30);
+    private RainbowAnimation rainbow = new RainbowAnimation(0, 62);
+    private SingleFadeAnimation fade = new SingleFadeAnimation(0, 62);
+    private SolidColor color = new SolidColor(0, 62);
 
     private RGBWColor red = new RGBWColor(255,0,0);
     private RGBWColor blue = new RGBWColor(0,0,255);
@@ -50,9 +50,9 @@ public class LedController implements Subsystem {
         if (Core.isBlue() && isAuto){
             led.setControl(fade.withColor(blue));
         } else if (isAuto){
-            led.setControl(fade.withColor(red));
+            led.setControl(fade.withColor(green));
         } else if (FOM > 1.0){
-            led.setControl(color.withColor(red));
+            led.setControl(color.withColor(green));
         } else {
             led.setControl(rainbow);
         }
