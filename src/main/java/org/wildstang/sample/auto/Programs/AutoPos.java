@@ -29,8 +29,17 @@ public final class AutoPos {
     public static final Pose2d highPreDepot = new Pose2d(0.5, 7.4, new Rotation2d(Math.toRadians(260)));
     public static final Pose2d highPostDepot = new Pose2d(0.5, 6.1, new Rotation2d(Math.toRadians(260)));
 
-    public static final Pose2d highJumpToNeutral = new Pose2d(10.0, 5.68, new Rotation2d(319.1));
-    public static final Pose2d highJumpToAlliance = new Pose2d(-10.0, 5.68, new Rotation2d(319.1));
-    public static final Pose2d lowJumpToNeutral = new Pose2d(10.0, 2.4, new Rotation2d(40.9));
-    public static final Pose2d lowJumpToAlliance = new Pose2d(-10.0, 2.4, new Rotation2d(40.9));
+    public static final Pose2d highJumpToNeutral = new Pose2d(10.0, 5.68, new Rotation2d(Math.toRadians(319.1)));
+    public static final Pose2d highJumpToAlliance = new Pose2d(-10.0, 5.68, new Rotation2d(Math.toRadians(319.1)));
+    public static final Pose2d highJumpToAlliance2 = new Pose2d(-10.0, 5.68, new Rotation2d(Math.toRadians(139.1)));
+    public static final Pose2d lowJumpToNeutral = new Pose2d(10.0, 2.4, new Rotation2d(Math.toRadians(40.9)));
+    public static final Pose2d lowJumpToAlliance = new Pose2d(-10.0, 2.4, new Rotation2d(Math.toRadians(40.9)));
+    public static final Pose2d highIntake = new Pose2d(8.4, 4.8, new Rotation2d(Math.toRadians(319.1)));
+    public static final Pose2d lowIntake = new Pose2d(8.4, 3.28, new Rotation2d(Math.toRadians(40.9)));
+
+    public static final Pose2d loopA = new Pose2d(7.6, 3.2, new Rotation2d(Math.toRadians(319.1)));
+    public static final Pose2d loopB = new Pose2d(7.7, 4.2, new Rotation2d(Math.toRadians(270)));
+    public static final Pose2d loopC = new Pose2d(6.5, 4.4, new Rotation2d(Math.toRadians(180)));
+    public static final Pose2d loopD = new Pose2d(6.0, 3.8, new Rotation2d(Math.toRadians(139.1)));
+    public static final Pose2d loopE = new Pose2d(6.2, 2.6, new Rotation2d(Math.toRadians(139.1)));
 }

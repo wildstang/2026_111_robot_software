@@ -61,6 +61,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
 
     public boolean autoUsePID = true;
     public double autoMaxSpeed = 1.0;
+    private boolean isShooting = false;
 
     private swerveCTRE swerve = new swerveCTRE(DriveConstants.swerveCTREconsts, 
         DriveConstants.frontLeft, DriveConstants.frontRight, DriveConstants.backLeft, DriveConstants.backRight);
@@ -89,6 +90,8 @@ public class SwerveDrive extends SwerveDriveTemplate {
 
     @Override
     public void inputUpdate(Input source) {
+
+        isShooting = Math.abs(leftTrigger.getValue()) > 0.5;
         
         // If none of those conditions are met, return to Teleop mode
         if (rightBumper.getValue()){
@@ -217,7 +220,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
         pose.addOdometryObservation(swervePose);
 
         if (driveState == DriveType.TELEOP) {
-            this.swerveSignal.setTranslation(horizontalPower, verticalPower);
+            this.swerveSignal.setTranslation(horizontalPower, verticalPower, isShooting ? 0.6 : 1.0);
 
         } else if (driveState == DriveType.SNAKE){
             this.swerveSignal.setSnake(verticalPower, horizontalPower); 
@@ -383,6 +386,9 @@ public class SwerveDrive extends SwerveDriveTemplate {
     }
     public Pose2d getSwervePose(){
         return swervePose;
+    }
+    public void setAutoSnake(boolean isUsing){
+        swerveSignal.setAutoSnake(isUsing);
     }
 
     // @Override

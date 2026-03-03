@@ -22,6 +22,8 @@ public class SwerveSignal {
     private Pose2d drivingPose = new Pose2d();
     private Pose2d currentPose = new Pose2d();
     private double autoMaxSpeed = 1.0;
+    private boolean autoSnake = false;
+    private double teleopMax = 1.0;
     public enum controlState {MANUAL, ROTLOCKED, SNAKE, DRIVETOPOINT, X_DRIVETOPOINT, Y_DRIVETOPOINT}
     private controlState state = controlState.MANUAL;
     private SwerveRequest.FieldCentric driveCommand = new SwerveRequest.FieldCentric()
@@ -47,6 +49,8 @@ public class SwerveSignal {
                 .withTargetDirection(new Rotation2d(Math.toRadians(getRotTarget())))
                 .withRotationalDeadband(0.05);
             //.withTargetRateFeedforward(double) to potentially include rotation rate
+
+
         } else if (state == controlState.SNAKE){
             if (getVertical() != 0 || getHorizontal() != 0) {
                 setRotTarget(Math.toDegrees(Math.atan2(getHorizontal(), getVertical())));
@@ -57,6 +61,8 @@ public class SwerveSignal {
             return driveLockedCommand.withVelocityX(getVertical() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withTargetDirection(new Rotation2d(Math.toRadians(getRotTarget())));
+
+
         } else if (state == controlState.DRIVETOPOINT){
             // translationRequest.setTarget(getDriveToPoint(), autoMaxSpeed);
             double velX = DriveConstants.ALIGN_P * DriveConstants.maxSpeed.in(MetersPerSecond) * 
@@ -71,15 +77,25 @@ public class SwerveSignal {
                 velY = Math.signum(velY) * autoMaxSpeed * DriveConstants.maxSpeed.in(MetersPerSecond);
             }
             if (Math.abs(velY) < 0.06) velY = 0;
+            if (autoSnake){
+                return translationRequest.withVelocityX(velX).withVelocityY(velY)
+                    .withTargetDirection(new Rotation2d(Math.atan2(velY, velX)));
+            }
             return translationRequest.withVelocityX(velX)
             .withVelocityY(velY)
             .withTargetDirection(getDriveToPoint().getRotation());
+
+
         } else if (state == controlState.X_DRIVETOPOINT){
             xTranslationRequest.setTarget(getDriveToPoint(), getHorizontal());
             return xTranslationRequest;
+
+
         } else if (state == controlState.Y_DRIVETOPOINT){
             yTranslationRequest.setTarget(getDriveToPoint(), getVertical());
             return yTranslationRequest;
+
+
         } else {//} else if (state == controlState.MANUAL){
             return driveCommand.withVelocityX(getVertical() * DriveConstants.maxSpeed.in(MetersPerSecond))
                 .withVelocityY(getHorizontal() * DriveConstants.maxSpeed.in(MetersPerSecond))
@@ -98,6 +114,13 @@ public class SwerveSignal {
     public void setTranslation(double hori, double vert){
         this.verticalSpeed = vert;
         this.horizontalSpeed = hori;
+        teleopMax = 1.0;
+        if (state != controlState.ROTLOCKED) state = controlState.MANUAL;
+    }
+    public void setTranslation(double hori, double vert, double max){
+        this.verticalSpeed = vert;
+        this.horizontalSpeed = hori;
+        teleopMax = max;
         if (state != controlState.ROTLOCKED) state = controlState.MANUAL;
     }
     public void setFreeRotation(double rotation){
@@ -141,13 +164,19 @@ public class SwerveSignal {
         this.horizontalSpeed = hori;
         state = controlState.SNAKE;
     }
+    public void setAutoSnake(boolean isUsing){
+        this.autoSnake = isUsing;
+    }
     public double getVertical(){ 
+        if (Math.abs(verticalSpeed) > teleopMax) return teleopMax * Math.signum(verticalSpeed);
         return verticalSpeed;
     }
     public double getHorizontal(){ 
+        if (Math.abs(horizontalSpeed) > teleopMax) return teleopMax * Math.signum(horizontalSpeed);
         return horizontalSpeed;
     }
     public double getRotation(){
+        if (Math.abs(rotationSpeed) > teleopMax) return teleopMax * Math.signum(rotationSpeed);
         return rotationSpeed;
     }
     public double getRotTarget(){

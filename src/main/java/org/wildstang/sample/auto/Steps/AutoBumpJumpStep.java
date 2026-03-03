@@ -34,7 +34,7 @@ public class AutoBumpJumpStep extends AutoStep {
 
     @Override
     public void update() {
-        swerve.setAutoValues(toJump, 0.6);
+        swerve.setAutoValues(toJump, 1.0);
         if (timer.hasElapsed(duration)) {
             swerve.resetTranslation(reset.getX(), reset.getY());
             swerve.setAutoValues(reset);

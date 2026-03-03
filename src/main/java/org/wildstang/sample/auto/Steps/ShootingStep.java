@@ -41,6 +41,7 @@ public class ShootingStep extends AutoStep{
             intake.setDeployState(DeployState.STOWED);
             intake.setIntakeState(IntakeState.SLOW);
             timer.start();
+            firstRun = false;
         }
         if (timer.hasElapsed(time)){
             ballpath.setBallpathState(GameState.STOP);

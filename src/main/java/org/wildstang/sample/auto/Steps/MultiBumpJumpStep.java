@@ -21,15 +21,17 @@ public class MultiBumpJumpStep extends AutoStep {
     private Pose2d[] poses;
     private Pose2d reset;
     private double duration;
+    private double speed;
 
     private Timer timer = new Timer();
 
-    public MultiBumpJumpStep(Pose2d[] poses, int jumpIndex, Pose2d resetPose, double time){
+    public MultiBumpJumpStep(Pose2d[] poses, int jumpIndex, Pose2d resetPose, double time, double maxSpeed){
         swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
         this.poses = poses;
         this.jump = jumpIndex;
         this.reset = resetPose;
         this.duration = time;
+        this.speed = maxSpeed;
     }
 
     @Override
@@ -41,13 +43,14 @@ public class MultiBumpJumpStep extends AutoStep {
     @Override
     public void update() {
 
-        if (index != jump) swerve.setAutoValues(poses[index], 1.0);
-        else swerve.setAutoValues(poses[jump], 0.6);
+        if (index >= poses.length) setFinished();
+        if (index != jump) swerve.setAutoValues(poses[index], speed);
+        else swerve.setAutoValues(poses[jump], 1.0);
         
         // Drive to intermediate point
         if (index < poses.length - 1) {
             swerve.usePID(false);
-            if (index != jump && swerve.isAtPosition(0.2)) {
+            if (index != jump && swerve.isAtPosition(0.3)) {
                 index++;
                 if (index == jump) timer.reset();
             }
