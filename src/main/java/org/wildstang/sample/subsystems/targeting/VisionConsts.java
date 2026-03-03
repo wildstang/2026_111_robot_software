@@ -18,8 +18,10 @@ public class VisionConsts {
     public static final Translation2d CENTER_OF_HUB = new Translation2d(182.11*inToM, 158.32*inToM);
     public static final double ALLIANCE_ZONE = 181.56*inToM;
     public static final double halfFieldY = 158.85*inToM;
-    public static final Translation2d lowFeedPos = new Translation2d(1.56, 3.32);
-    public static final Translation2d highFeedPos = new Translation2d(1.56, 4.76);
+    public static final Translation2d lowFeedPos = new Translation2d(1.56, 1.0);
+    public static final Translation2d lowCenterFeed = new Translation2d(1.56, 3.32);
+    public static final Translation2d highFeedPos = new Translation2d(1.56, 7.08);
+    public static final Translation2d highCenterFeed = new Translation2d(1.56, 4.76);
     public static final double turretOffset = 145; //in degrees
 
 }

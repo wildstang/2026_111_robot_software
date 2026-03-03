@@ -52,10 +52,20 @@ public class Climb implements Subsystem{
             //this works for testing
             //we'll eventually change this to use .setPosition(target),
             //with an upper and lower target instead of manual
-            climb1Motor.setSpeed(climbUpSpeed);
+            if(climb1Motor.getPosition() > 0.55){
+                climb1Motor.setPosition(0.55);
+            }else if(climb1Motor.getPosition() < 0.55){
+                climb1Motor.setSpeed(climbUpSpeed);
+            }
+            
         }
-        else{
-            climb1Motor.setSpeed(climbDownSpeed);
+        else if (climbState == ClimbState.DOWN){
+            if(climb1Motor.getPosition() > 0){
+                climb1Motor.setSpeed(climbDownSpeed);
+            }else if(climb1Motor.getPosition() < 0){
+                climb1Motor.setPosition(0);
+                
+            }
         }
     }
 

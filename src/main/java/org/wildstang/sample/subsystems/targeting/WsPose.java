@@ -2,10 +2,12 @@ package org.wildstang.sample.subsystems.targeting;
 
 // ton of imports
 import org.wildstang.framework.subsystems.Subsystem;
+import org.wildstang.hardware.roborio.inputs.WsJoystickButton;
 import org.wildstang.sample.robot.WsInputs;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.Launcher;
 import org.wildstang.sample.subsystems.Turret;
+import org.wildstang.sample.subsystems.LED.LedController;
 import org.wildstang.sample.subsystems.swerve.DriveConstants;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import org.wildstang.sample.subsystems.targeting.LimelightHelpers.PoseEstimate;
@@ -34,7 +36,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class WsPose implements Subsystem {
 
-    private DigitalInput leftBumper;//drive over bump
+    private WsJoystickButton leftBumper, operatorLeftBumper, operatorRightBumper;//drive over bump
 
     private final double inToM = 1.0/39.37;
 
@@ -44,6 +46,7 @@ public class WsPose implements Subsystem {
 
     private double distanceDriven = 0;
     private double rotationSpeed = 0;
+    private boolean feedingSides = true;
 
     private WsAprilTagLL[] cameras;
 
@@ -58,6 +61,7 @@ public class WsPose implements Subsystem {
     public SwerveDrive swerve;
     private Turret turret;
     private Launcher launcher;
+    private LedController led;
 
     // WPI blue relative (m and CCW rad)
     public Pose2d estimatedPose = new Pose2d();
@@ -76,6 +80,8 @@ public class WsPose implements Subsystem {
         if(leftBumper.getValue()){
             driverOverBump();
         }
+        if (operatorLeftBumper.getValue()) feedingSides = true;
+        if (operatorRightBumper.getValue()) feedingSides = false;
     }
 
     @Override
@@ -83,6 +89,7 @@ public class WsPose implements Subsystem {
         swerve = (SwerveDrive) Core.getSubsystemManager().getSubsystem(WsSubsystems.SWERVE_DRIVE);
         turret = (Turret) Core.getSubsystemManager().getSubsystem(WsSubsystems.TURRET);
         launcher = (Launcher) Core.getSubsystemManager().getSubsystem(WsSubsystems.LAUNCHER);
+        led = (LedController) Core.getSubsystemManager().getSubsystem(WsSubsystems.LED);
         left = new WsAprilTagLL("limelight-left", swerve::getMegaTag2Yaw);
         right = new WsAprilTagLL("limelight-right", swerve::getMegaTag2Yaw);
         cameras = new WsAprilTagLL[] {left, right};
@@ -90,8 +97,12 @@ public class WsPose implements Subsystem {
 
     @Override
     public void init() {
-        leftBumper = (DigitalInput) WsInputs.DRIVER_LEFT_SHOULDER.get();
+        leftBumper = (WsJoystickButton) WsInputs.DRIVER_LEFT_SHOULDER.get();
         leftBumper.addInputListener(this);
+        operatorLeftBumper = (WsJoystickButton) WsInputs.OPERATOR_LEFT_SHOULDER.get();
+        operatorLeftBumper.addInputListener(this);
+        operatorRightBumper = (WsJoystickButton) WsInputs.OPERATOR_RIGHT_SHOULDER.get();
+        operatorRightBumper.addInputListener(this);
     }
 
     @Override
@@ -132,15 +143,18 @@ public class WsPose implements Subsystem {
             SmartDashboard.putNumber("Camera FOM", camFOM);
             SmartDashboard.putNumber("Best StdDev", bestStdDev);
 
-            if(camFOM > odFOM){
-          
-                SmartDashboard.putString("Has Reset", "False");
-                
-            }else if (camFOM <= odFOM){
+            if (camFOM <= odFOM) {
                 addVisionObservation(bestEstimate, 1/bestStdDev);
 
                 distanceDriven = camFOM;
                 SmartDashboard.putString("Has Reset", "True");
+            } else if (camFOM <= odFOM+0.2){
+                addVisionObservation(bestEstimate, 1/bestStdDev);
+                SmartDashboard.putString("HasReset", "True");
+            } else if(camFOM > odFOM){
+          
+                SmartDashboard.putString("Has Reset", "False");
+                
             }
         }
 
@@ -154,22 +168,32 @@ public class WsPose implements Subsystem {
                 firingTarget = shootOnTheMove(VisionConsts.CENTER_OF_HUB.getX() - estimatedPose.getX(), 
                     VisionConsts.CENTER_OF_HUB.getY() - estimatedPose.getY());
             } else {
-                firingTarget = isFeedingLeft() ? 
-                    shootOnTheMove(VisionConsts.highFeedPos.getX() - estimatedPose.getX(),
-                        VisionConsts.highFeedPos.getY() - estimatedPose.getY()) : 
-                    shootOnTheMove(VisionConsts.lowFeedPos.getX() - estimatedPose.getX(), 
-                        VisionConsts.lowFeedPos.getY() - estimatedPose.getY());
+                if (feedingSides){
+                    firingTarget = isFeedingLeft() ? 
+                        shootOnTheMove(VisionConsts.highFeedPos.getX() - estimatedPose.getX(),
+                            VisionConsts.highFeedPos.getY() - estimatedPose.getY()) : 
+                        shootOnTheMove(VisionConsts.lowFeedPos.getX() - estimatedPose.getX(), 
+                            VisionConsts.lowFeedPos.getY() - estimatedPose.getY());
+                } else {
+                    firingTarget = isFeedingLeft() ?
+                        shootOnTheMove(VisionConsts.highCenterFeed.getX() - estimatedPose.getX(),
+                            VisionConsts.highCenterFeed.getY() - estimatedPose.getY()) : 
+                        shootOnTheMove(VisionConsts.lowCenterFeed.getX() - estimatedPose.getX(), 
+                            VisionConsts.lowCenterFeed.getY() - estimatedPose.getY());
+                }
             }
         } else {
             if (inAllianceZone()) {
                 firingTarget = VisionConsts.CENTER_OF_HUB;
             } else {
-                firingTarget = isFeedingLeft() ? VisionConsts.highFeedPos : VisionConsts.lowFeedPos;
+                if (feedingSides) firingTarget = isFeedingLeft() ? VisionConsts.highFeedPos : VisionConsts.lowFeedPos;
+                else firingTarget = isFeedingLeft() ? VisionConsts.highCenterFeed : VisionConsts.lowCenterFeed;
             }
         }
         firingPosePublisher.set(new Pose2d(firingTarget, new Rotation2d()));
         SmartDashboard.putNumber("Pose firing X", firingTarget.getX());
         SmartDashboard.putNumber("Pose firing Y", firingTarget.getY());
+        SmartDashboard.putBoolean("Pose feeding sides", feedingSides);
          SmartDashboard.putNumber("Best Standard Deviation ", bestStdDev);
        
     }
@@ -199,7 +223,7 @@ public class WsPose implements Subsystem {
     }
 
     public void driverOverBump(){
-        distanceDriven = 100000;
+        distanceDriven = 3;
     }
 
     private WsAprilTagLL getBestCamera(){
