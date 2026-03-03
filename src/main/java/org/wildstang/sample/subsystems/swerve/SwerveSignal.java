@@ -64,11 +64,13 @@ public class SwerveSignal {
             if (Math.abs(velX) > autoMaxSpeed * DriveConstants.maxSpeed.in(MetersPerSecond)){
                 velX = Math.signum(velX) * autoMaxSpeed * DriveConstants.maxSpeed.in(MetersPerSecond);
             }
+            if (Math.abs(velX) < 0.06) velX = 0;
             double velY = DriveConstants.ALIGN_P * DriveConstants.maxSpeed.in(MetersPerSecond) *
                 (getDriveToPoint().getY() - currentPose.getY());
             if (Math.abs(velY) > autoMaxSpeed * DriveConstants.maxSpeed.in(MetersPerSecond)){
-                velX = Math.signum(velY) * autoMaxSpeed * DriveConstants.maxSpeed.in(MetersPerSecond);
+                velY = Math.signum(velY) * autoMaxSpeed * DriveConstants.maxSpeed.in(MetersPerSecond);
             }
+            if (Math.abs(velY) < 0.06) velY = 0;
             return translationRequest.withVelocityX(velX)
             .withVelocityY(velY)
             .withTargetDirection(getDriveToPoint().getRotation());

@@ -29,19 +29,23 @@ public class BlueHighBumpDepot extends AutoProgram{
         addStep(new ShootingStep(1.5));
 
         addStep(new IntakingStep());
-        addStep(new AutoBumpJumpStep(swerve, AutoPos.highJumpToNeutral, 1.6, AutoPos.highPostJump));
+        addStep(new AutoBumpJumpStep(swerve, AutoPos.highJumpToNeutral, 2.0, AutoPos.highPostJump));
+        addStep(new AutoStepDelay(100));
         addStep(new SwerveMultiPointStep(new Pose2d[]{AutoPos.highPostJump, AutoPos.highPreIntake}, 
             new double[]{1.0, 1.0}));
         addStep(new SwerveToPointStep(swerve, AutoPos.highFinishIntake, 0.4));
-        addStep(new MultiBumpJumpStep(new Pose2d[]{AutoPos.highPostJump, AutoPos.highJumpToAlliance, AutoPos.highShootPos}, 1, AutoPos.highShootPos, 1.6));
+        addStep(new SwerveToPointStep(swerve, AutoPos.highPostJump, 1.0));
+        addStep(new AutoStepDelay(100));
+        addStep(new AutoBumpJumpStep(swerve, AutoPos.highJumpToAlliance, 2.2, AutoPos.highShootPos));
+        // addStep(new MultiBumpJumpStep(new Pose2d[]{AutoPos.highPostJump, AutoPos.highJumpToAlliance, AutoPos.highShootPos}, 1, AutoPos.highShootPos, 1.8));
         addStep(new AutoStepDelay(100));
         addStep(new ShootingStep(5.0));
 
-        addStep(new IntakingStep());
-        addStep(new SwerveToPointStep(swerve, AutoPos.highPreDepot));
-        addStep(new AutoReadyBallpathStep());
-        addStep(new SwerveToPointStep(swerve, AutoPos.highPostDepot, 0.35));
-        addStep(new ShootingStep(3.0));
+        // addStep(new IntakingStep());
+        // addStep(new SwerveToPointStep(swerve, AutoPos.highPreDepot));
+        // addStep(new AutoReadyBallpathStep());
+        // addStep(new SwerveToPointStep(swerve, AutoPos.highPostDepot, 0.35));
+        // addStep(new ShootingStep(3.0));
     }
 
     @Override

@@ -128,6 +128,7 @@ public class WsPose implements Subsystem {
             //SmartDashboard.putString("Vision/BestCamera", bestCamera.CameraID);
 
             bestEstimate = bestCamera.update().orElse(null);
+            SmartDashboard.putNumber("Pose TID", bestCamera.tid);
         }
             
             
@@ -159,9 +160,12 @@ public class WsPose implements Subsystem {
         }
 
         estimatedPosePublisher.set(estimatedPose);
-         if(bestEstimate != null){
+        if(bestEstimate != null){
+            SmartDashboard.putNumberArray("Best Estimate", new double[]{bestEstimate.pose.getX(), bestEstimate.pose.getY()});
             bestEstimatePosePublisher.set(bestEstimate.pose);
             SmartDashboard.putNumber("Tid", bestCamera.tid);
+        }else if (estimatedPose != null){
+            SmartDashboard.putNumberArray("Estimated Pose", new double[]{estimatedPose.getX(), estimatedPose.getY()});
         }
         
         if (swerve.speedMagnitude() > 0.1){
@@ -197,6 +201,7 @@ public class WsPose implements Subsystem {
         SmartDashboard.putBoolean("Pose feeding sides", feedingSides);
          SmartDashboard.putNumber("Best Standard Deviation ", bestStdDev);
        
+        
     }
 
     private double cameraFOM(WsAprilTagLL bestCamera){
@@ -225,6 +230,9 @@ public class WsPose implements Subsystem {
 
     public void driverOverBump(){
         distanceDriven = 3;
+    }
+    public void odFOMlowinAuto(){
+        distanceDriven = 0.01;
     }
 
     private WsAprilTagLL getBestCamera(){

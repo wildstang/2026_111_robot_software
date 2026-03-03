@@ -6,7 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 public final class AutoPos {
     
     public static final Pose2d lowStart = new Pose2d(3.4, 2.4, new Rotation2d(Math.toRadians(40.9)));
-    public static final Pose2d lowPostJump = new Pose2d(6.0, 2.4, new Rotation2d(Math.toRadians(40.9)));
+    public static final Pose2d lowPostJump = new Pose2d(6.0, 2.6, new Rotation2d(Math.toRadians(40.9)));
     public static final Pose2d lowPreIntake = new Pose2d(7.2, 0.8, new Rotation2d(Math.toRadians(90)));
     public static final Pose2d lowFinishIntake = new Pose2d(7.7, 3.4, new Rotation2d(Math.toRadians(90)));
     public static final Pose2d lowShootPos = new Pose2d(3.0, 2.4, new Rotation2d(Math.toRadians(40.9)));
@@ -17,7 +17,7 @@ public final class AutoPos {
     
     public static final Pose2d highStart = new Pose2d(3.4, 5.68, new Rotation2d(Math.toRadians(0)));
     public static final Pose2d highStart2 = new Pose2d(3.4, 5.68, new Rotation2d(Math.toRadians(319.1)));
-    public static final Pose2d highPostJump = new Pose2d(6.0, 8.08 - lowPostJump.getY(), new Rotation2d(Math.toRadians(360 - lowPostJump.getRotation().getDegrees())));
+    public static final Pose2d highPostJump = new Pose2d(6.2, 8.08 - lowPostJump.getY(), new Rotation2d(Math.toRadians(360 - lowPostJump.getRotation().getDegrees())));
     public static final Pose2d highPreIntake = new Pose2d(7.2, 8.08 - lowPreIntake.getY(), new Rotation2d(Math.toRadians(360 - lowPreIntake.getRotation().getDegrees())));
     public static final Pose2d highFinishIntake = new Pose2d(7.7, 8.08 - lowFinishIntake.getY(), new Rotation2d(Math.toRadians(360 - lowFinishIntake.getRotation().getDegrees())));
     public static final Pose2d highShootPos = new Pose2d(3.0, 8.08 - lowShootPos.getY(), new Rotation2d(Math.toRadians(360 - lowShootPos.getRotation().getDegrees())));
@@ -30,7 +30,7 @@ public final class AutoPos {
     public static final Pose2d highPostDepot = new Pose2d(0.5, 6.1, new Rotation2d(Math.toRadians(260)));
 
     public static final Pose2d highJumpToNeutral = new Pose2d(10.0, 5.68, new Rotation2d(319.1));
-    public static final Pose2d highJumpToAlliance = new Pose2d(0.0, 5.68, new Rotation2d(319.1));
+    public static final Pose2d highJumpToAlliance = new Pose2d(-10.0, 5.68, new Rotation2d(319.1));
     public static final Pose2d lowJumpToNeutral = new Pose2d(10.0, 2.4, new Rotation2d(40.9));
-    public static final Pose2d lowJumpToAlliance = new Pose2d(0.0, 2.4, new Rotation2d(40.9));
+    public static final Pose2d lowJumpToAlliance = new Pose2d(-10.0, 2.4, new Rotation2d(40.9));
 }

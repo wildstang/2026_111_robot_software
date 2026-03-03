@@ -26,9 +26,9 @@ import edu.wpi.first.units.measure.LinearVelocity;
 
 public final class DriveConstants {
     /** How far is close enough to our target position (m)  */
-    public static final double POSITION_TOLERANCE = 0.075;
+    public static final double POSITION_TOLERANCE = 0.15;
     /**P Loop for Translating to a point */
-    public static final double ALIGN_P = 0.32*2.0;
+    public static final double ALIGN_P = 0.32*2.0/1.5;
     /** D term for Translating to a point */
     public static final double ALIGN_D = 0;
     /**deadband of the controller's joysticks */
@@ -75,15 +75,15 @@ public final class DriveConstants {
     public static final CANBus canBus = new CANBus("drive_canivore", "./logs/example.hoot");
     
     //find this from swerve website
-    public static final LinearVelocity maxSpeed = MetersPerSecond.of(4.93);//5.72);???
+    public static final LinearVelocity maxSpeed = MetersPerSecond.of(5.72);
     //this is causing jitter, leave at 0
     private static final double coupleRatio = 4.5;
     //drive gear ratio
-    private static final double driveRatio = 6.48;//5.4;???
+    private static final double driveRatio = 5.4;
     //steer gear ratio
     private static final double steerRatio = 12.1;
     //empirically find this, 2910 had 1.95
-    private static final double wheelRadius = 1.92/39.37;//1.95/39.37*59.0/50.0;???
+    private static final double wheelRadius = 1.95/39.37*59.0/50.0;
     private static final boolean invertLeft = false;
     private static final boolean invertRight = true;
     //width to center of wheel

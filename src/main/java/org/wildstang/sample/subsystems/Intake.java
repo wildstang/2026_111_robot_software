@@ -112,7 +112,7 @@ public class Intake implements Subsystem{
     @Override
     public void update() {
         if(direction == IntakeState.INTAKING){
-            intakeMotor.setSpeed(-0.75);
+            intakeMotor.setSpeed(-1.0);
         }
         else if (direction == IntakeState.REVERSE){
             intakeMotor.setSpeed(1.0);

@@ -31,13 +31,13 @@ public class AutoSetupStep extends AutoStep{
         odoPose = new Pose2d(x,y, Rotation2d.fromDegrees(pathHeading));
         heading = pathHeading;
         Core.setAlliance(alliance);
-        LedController led = (LedController) Core.getSubsystemManager().getSubsystem(WsSubsystems.LED);
+        led = (LedController) Core.getSubsystemManager().getSubsystem(WsSubsystems.LED);
     }
     public AutoSetupStep(Pose2d startingPose, Alliance alliance){
         odoPose = startingPose;
         heading = startingPose.getRotation().getDegrees();
         Core.setAlliance(alliance);
-        LedController led = (LedController) Core.getSubsystemManager().getSubsystem(WsSubsystems.LED);
+        led = (LedController) Core.getSubsystemManager().getSubsystem(WsSubsystems.LED);
     }
 
     public void update(){
