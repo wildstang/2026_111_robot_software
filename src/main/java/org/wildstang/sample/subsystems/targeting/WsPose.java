@@ -161,6 +161,7 @@ public class WsPose implements Subsystem {
         estimatedPosePublisher.set(estimatedPose);
          if(bestEstimate != null){
             bestEstimatePosePublisher.set(bestEstimate.pose);
+            SmartDashboard.putNumber("Tid", bestCamera.tid);
         }
         
         if (swerve.speedMagnitude() > 0.1){
