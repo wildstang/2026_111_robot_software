@@ -145,6 +145,9 @@ public class WsPose implements Subsystem {
         }
 
         estimatedPosePublisher.set(estimatedPose);
+         if(bestEstimate != null){
+            bestEstimatePosePublisher.set(bestEstimate.pose);
+        }
         
         if (swerve.speedMagnitude() > 0.1){
             if (inAllianceZone()){
@@ -168,12 +171,7 @@ public class WsPose implements Subsystem {
         SmartDashboard.putNumber("Pose firing X", firingTarget.getX());
         SmartDashboard.putNumber("Pose firing Y", firingTarget.getY());
          SmartDashboard.putNumber("Best Standard Deviation ", bestStdDev);
-        if(bestEstimate != null){
-            SmartDashboard.putNumberArray("Best Estimate", new double[]{bestEstimate.pose.getX(), bestEstimate.pose.getY()});
-            bestEstimatePosePublisher.set(bestEstimate.pose);
-        }else if (estimatedPose != null){
-            SmartDashboard.putNumberArray("Estimated Pose", new double[]{estimatedPose.getX(), estimatedPose.getY()});
-        }
+       
     }
 
     private double cameraFOM(WsAprilTagLL bestCamera){
