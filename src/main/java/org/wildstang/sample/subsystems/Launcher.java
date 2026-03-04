@@ -157,6 +157,7 @@ public class Launcher implements Subsystem{
 
     @Override
     public void resetState() {
+        currentState = GameStates.STOW;
     }
 
      @Override

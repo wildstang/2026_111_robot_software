@@ -93,6 +93,7 @@ public class Ballpath implements Subsystem{
 
     @Override
     public void resetState() {
+        state = GameState.STOP;
     }
 
     @Override

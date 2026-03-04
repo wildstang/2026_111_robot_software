@@ -79,6 +79,7 @@ public class SwerveDrive extends SwerveDriveTemplate {
     private Pose2d swervePose;
     private double swerveGyro;
     private WsPose pose;
+    private boolean visionInAuto = false;
 
     private Pose2d targetPose = new Pose2d();
     StructPublisher<Pose2d> targetPosePublisher = 
@@ -227,7 +228,8 @@ public class SwerveDrive extends SwerveDriveTemplate {
         } else if (driveState == DriveType.AUTO) {
             if (Math.abs(swerve.getPigeon2().getRoll().getValueAsDouble()) >6.0 || Math.abs(swerve.getPigeon2().getPitch().getValueAsDouble())>6.0) pose.driverOverBump();
             //pose.driverOverBump();
-            pose.odFOMlowinAuto();
+            if (!visionInAuto) pose.odFOMlowinAuto();
+            else pose.odFOMhighinAuto();
             swerveSignal.setDriveToPoint(targetPose, autoMaxSpeed, swervePose);
         }
             
@@ -285,6 +287,10 @@ public class SwerveDrive extends SwerveDriveTemplate {
     // Sets autonomous values from the motion profile in Driver Station relative 
     public void setAutoValues(double xVelocity, double yVelocity, double xAccel, double yAccel, Pose2d target) {
         targetPose = target;
+    }
+
+    public void turnOnVision(boolean turnOn){
+        visionInAuto = turnOn;
     }
 
     // Sets autonomous values when driving to a pose and not using a motion profile

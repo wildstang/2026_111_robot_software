@@ -154,6 +154,8 @@ public class Intake implements Subsystem{
 
     @Override
     public void resetState() {
+        direction = IntakeState.NEUTRAL;
+        deploy = DeployState.OUT;
     }
 
     @Override

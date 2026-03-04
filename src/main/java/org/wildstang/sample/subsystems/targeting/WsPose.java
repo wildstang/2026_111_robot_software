@@ -232,7 +232,10 @@ public class WsPose implements Subsystem {
         distanceDriven = 3;
     }
     public void odFOMlowinAuto(){
-        distanceDriven = 0.01;
+        distanceDriven = -0.2;
+    }
+    public void odFOMhighinAuto(){
+        distanceDriven = 0.4;
     }
 
     private WsAprilTagLL getBestCamera(){

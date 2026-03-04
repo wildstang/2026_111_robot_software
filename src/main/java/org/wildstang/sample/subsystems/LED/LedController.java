@@ -3,7 +3,9 @@ package org.wildstang.sample.subsystems.LED;
 import org.wildstang.framework.core.Core;
 import org.wildstang.framework.io.inputs.Input;
 import org.wildstang.framework.subsystems.Subsystem;
+import org.wildstang.hardware.roborio.inputs.WsJoystickAxis;
 import org.wildstang.sample.robot.CANConstants;
+import org.wildstang.sample.robot.WsInputs;
 import org.wildstang.sample.robot.WsSubsystems;
 import org.wildstang.sample.subsystems.swerve.SwerveDrive;
 import org.wildstang.sample.subsystems.targeting.WsPose;
@@ -26,6 +28,8 @@ public class LedController implements Subsystem {
     private WsPose pose;
     private CANdle led;
     private CANdleConfiguration config = new CANdleConfiguration();
+
+    private WsJoystickAxis driverLY;
 
     private RainbowAnimation rainbow = new RainbowAnimation(0, 62);
     private SingleFadeAnimation fade = new SingleFadeAnimation(0, 62);
@@ -50,9 +54,9 @@ public class LedController implements Subsystem {
         if (Core.isBlue() && isAuto){
             led.setControl(fade.withColor(blue));
         } else if (isAuto){
-            led.setControl(fade.withColor(green));
+            led.setControl(fade.withColor(red));
         } else if (FOM > 1.0){
-            led.setControl(color.withColor(green));
+            led.setControl(color.withColor(red));
         } else {
             led.setControl(rainbow);
         }
@@ -62,6 +66,7 @@ public class LedController implements Subsystem {
 
     @Override
     public void inputUpdate(Input source) {
+        isAuto = false;
     }
 
     @Override
@@ -71,10 +76,12 @@ public class LedController implements Subsystem {
 
     @Override
     public void init() {
+        driverLY = (WsJoystickAxis) WsInputs.DRIVER_LEFT_JOYSTICK_VERTICAL.get();
+        driverLY.addInputListener(this);
         
         //Outputs
         led = new CANdle(CANConstants.CANDLE, "drive_canivore");
-        config.LED.StripType = StripTypeValue.RGB;
+        config.LED.StripType = StripTypeValue.GRB;
         config.LED.BrightnessScalar = 1.0;
         config.CANdleFeatures.StatusLedWhenActive = StatusLedWhenActiveValue.Disabled;
         led.getConfigurator().apply(config);

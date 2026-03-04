@@ -15,8 +15,8 @@ public final class AutoPos {
     public static final Pose2d lowPreJump2 = new Pose2d(5.9, 2.4, new Rotation2d(Math.toRadians(220.9)));
     public static final Pose2d lowShootPos2 = new Pose2d(3.0, 2.4, new Rotation2d(Math.toRadians(220.9)));
     
-    public static final Pose2d highStart = new Pose2d(3.4, 5.68, new Rotation2d(Math.toRadians(0)));
-    public static final Pose2d highStart2 = new Pose2d(3.4, 5.68, new Rotation2d(Math.toRadians(319.1)));
+    public static final Pose2d highStart = new Pose2d(3.63, 5.54, new Rotation2d(Math.toRadians(0)));
+    public static final Pose2d highStart2 = new Pose2d(3.63, 5.54, new Rotation2d(Math.toRadians(319.1)));
     public static final Pose2d highPostJump = new Pose2d(6.2, 8.08 - lowPostJump.getY(), new Rotation2d(Math.toRadians(360 - lowPostJump.getRotation().getDegrees())));
     public static final Pose2d highPreIntake = new Pose2d(7.2, 8.08 - lowPreIntake.getY(), new Rotation2d(Math.toRadians(360 - lowPreIntake.getRotation().getDegrees())));
     public static final Pose2d highFinishIntake = new Pose2d(7.7, 8.08 - lowFinishIntake.getY(), new Rotation2d(Math.toRadians(360 - lowFinishIntake.getRotation().getDegrees())));
