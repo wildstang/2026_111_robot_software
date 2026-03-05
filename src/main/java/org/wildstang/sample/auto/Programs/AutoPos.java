@@ -42,4 +42,8 @@ public final class AutoPos {
     public static final Pose2d loopC = new Pose2d(6.5, 4.4, new Rotation2d(Math.toRadians(180)));
     public static final Pose2d loopD = new Pose2d(6.0, 3.8, new Rotation2d(Math.toRadians(139.1)));
     public static final Pose2d loopE = new Pose2d(6.2, 2.6, new Rotation2d(Math.toRadians(139.1)));
+    
+    public static final Pose2d outpostA = new Pose2d(1.75, 5.3, new Rotation2d(Math.toRadians(270)));
+    public static final Pose2d outpostB = new Pose2d(1.75, 2.8, new Rotation2d(Math.toRadians(270)));
+    public static final Pose2d outpostC = new Pose2d(0.7, 0.7, new Rotation2d(Math.toRadians(180)));
 }

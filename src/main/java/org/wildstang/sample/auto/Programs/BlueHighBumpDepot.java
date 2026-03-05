@@ -32,21 +32,21 @@ public class BlueHighBumpDepot extends AutoProgram{
         addStep(new ShootingStep(1.5));
 
         // // //below for straight there and back
-        // addStep(new IntakingStep());
+        addStep(new IntakingStep());
         // //straight line
         // // addStep(new MultiBumpJumpStep(new Pose2d[]{AutoPos.highJumpToNeutral, AutoPos.highIntake}, 
         // //     0, AutoPos.highPostJump, 1.4, 0.4));
         // //slight curve
-        // addStep(new MultiBumpJumpStep(new Pose2d[]{AutoPos.highJumpToNeutral, AutoPos.loopA, AutoPos.loopB}, 
-        //     0, AutoPos.highPostJump, 1.4, 0.4));
+        addStep(new MultiBumpJumpStep(new Pose2d[]{AutoPos.highJumpToNeutral, AutoPos.loopA, AutoPos.loopB}, 
+            0, AutoPos.highPostJump, 1.4, 0.4));
             
-        // addStep(new VisionOnStep(true));
-        // addStep(new MultiBumpJumpStep(new Pose2d[]{AutoPos.highPostJump, AutoPos.highJumpToAlliance, AutoPos.highShootPos}, 
-        //     1, AutoPos.highShootPos, 1.2, 1.0));
+        addStep(new VisionOnStep(true));
+        addStep(new MultiBumpJumpStep(new Pose2d[]{AutoPos.highPostJump, AutoPos.highJumpToAlliance, AutoPos.highShootPos}, 
+            1, AutoPos.highShootPos, 1.2, 1.0));
         // // AutoParallelStepGroup group2 = new AutoParallelStepGroup();
-        // addStep(new SwerveToPointStep(swerve, AutoPos.highShootPos));
-        // addStep(new ShootingStep(5.0));
-        // addStep(new VisionOnStep(false));
+        addStep(new SwerveToPointStep(swerve, AutoPos.highShootPos));
+        addStep(new ShootingStep(5.0));
+        addStep(new VisionOnStep(false));
         // addStep(group2);
 
         // //below for the loop

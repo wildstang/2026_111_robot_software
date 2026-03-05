@@ -57,6 +57,8 @@ public class LedController implements Subsystem {
             led.setControl(fade.withColor(red));
         } else if (FOM > 1.0){
             led.setControl(color.withColor(red));
+        } else if (ourHubActive){
+            led.setControl(color.withColor(green));
         } else {
             led.setControl(rainbow);
         }
