@@ -432,23 +432,23 @@ public class WsPose implements Subsystem {
     }
 
     public boolean goodToFire(){
-        if(inAllianceZone()){
-            //in alliance zone
-            // if(estimatedPose.getX() <= 158.6 && estimatedPose.getX() >= 118.6 && estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
-            //     //right up against the hub
-            //     return false;
-            // }
-            // if(estimatedPose.getX() < 46*inToM && estimatedPose.getY() >= 120*inToM && estimatedPose.getY() <= 160*inToM){
-            //     //behind climbing area
-            //     return false;
-            // }
+        // if(inAllianceZone()){
+        //     //in alliance zone
+        //     // if(estimatedPose.getX() <= 158.6 && estimatedPose.getX() >= 118.6 && estimatedPose.getY() <= 170 && estimatedPose.getY() >= 130){
+        //     //     //right up against the hub
+        //     //     return false;
+        //     // }
+        //     // if(estimatedPose.getX() < 46*inToM && estimatedPose.getY() >= 120*inToM && estimatedPose.getY() <= 160*inToM){
+        //     //     //behind climbing area
+        //     //     return false;
+        //     // }
 
-        } else {
-             if(estimatedPose.getY() <= 185*inToM && estimatedPose.getY() >= 130*inToM){
-                //behind the hub
-                return false;
-            }                
-        }
+        // } else {
+        //      if(estimatedPose.getY() <= 175*inToM && estimatedPose.getY() >= 140*inToM){
+        //         //behind the hub
+        //         return false;
+        //     }                
+        // }
         return true;
     }
     public boolean inAllianceZone(){

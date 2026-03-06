@@ -4,6 +4,8 @@ import org.wildstang.framework.core.AutoPrograms;
 import org.wildstang.sample.auto.Programs.BlueDepotOutpost;
 import org.wildstang.sample.auto.Programs.BlueHighBumpDepot;
 import org.wildstang.sample.auto.Programs.RedDepotOutpost;
+import org.wildstang.sample.auto.Programs.RedOutpost;
+import org.wildstang.sample.auto.Programs.BlueOutpost;
 import org.wildstang.sample.auto.Programs.RedHighBumpDepot;
 import org.wildstang.sample.auto.Programs.SampleAutoProgram;
 import org.wildstang.sample.auto.Programs.TestAngle;
@@ -23,7 +25,9 @@ public enum WsAutoPrograms implements AutoPrograms {
     BLUE_BUMP_DEPOT("Blue High Bump Depot", BlueHighBumpDepot.class),
     RED_BUMP_DEPOT("Red High Bump Depot", RedHighBumpDepot.class),
     RED_DEPOT_OUTPOST("Red Depot Outpost", RedDepotOutpost.class),
-    BLUE_DEPOT_OUTPOST("Blue Depot Outpost", BlueDepotOutpost.class)
+    BLUE_DEPOT_OUTPOST("Blue Depot Outpost", BlueDepotOutpost.class),
+    BLUE_OUTPOST("Blue Outpost", BlueOutpost.class),
+    RED_OUTPOST("Red Outpost", RedOutpost.class)
     ;
 
     /**

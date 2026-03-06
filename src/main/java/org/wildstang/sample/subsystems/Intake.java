@@ -140,8 +140,8 @@ public class Intake implements Subsystem{
             deployMotor.setPosition(Math.max(deployStart, deployStart+0.85-0.45*stowTimer.get()), 0);
         }
         if (deploy == DeployState.INTAKING){
-            if (deployMotor.getPosition() < deployStart+2.4) deployMotor.setSpeed(0.5);
-            else deployMotor.setSpeed(0.1);
+            if (deployMotor.getPosition() < deployStart+2.4) deployMotor.setSpeed(1.0);
+            else deployMotor.setSpeed(1.0);
             stowTimer.reset();
         }
         if (deploy == DeployState.RESETTING){
